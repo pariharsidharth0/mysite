@@ -86,8 +86,12 @@ function build() {
         const highlightClass = b.highlight ? 'highlight-book' : '';
         const hiddenClass = index >= 6 ? ' hidden-book' : '';
 
+        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http')) 
+            ? b.goodreads_url 
+            : `https://www.google.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
+
         booksHtml += `
-        <a href="${b.goodreads_url}" target="_blank" class="book-card ${highlightClass}${hiddenClass}">
+        <a href="${bookUrl}" target="_blank" class="book-card ${highlightClass}${hiddenClass}">
             <div class="book-image" style="background-image: url('${b.cover_image}');"></div>
             <div class="book-overlay">
                 <div class="book-details">
@@ -103,6 +107,7 @@ function build() {
         `;
     });
     html = html.replace('{{BOOKS_ITEMS}}', booksHtml);
+    html = html.replace('{{BOOKS_SECTION_TITLE}}', config.books_section_title || 'BOOKS // GOODREADS');
 
     let galleryHtml = '';
     config.gallery.forEach(g => {

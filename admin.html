@@ -3,219 +3,1074 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio Admin Dashboard</title>
+    <title>Portfolio CMS & Library Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-main: #f8f9fa;
+            --panel-bg: #ffffff;
+            --accent: #111111;
+            --accent-hover: #333333;
+            --border-color: #e5e5e5;
+            --text-dark: #111111;
+            --text-muted: #666666;
+            --gold: #ffd700;
+            --success: #28a745;
+            --error: #dc3545;
+            --font-heading: 'Oswald', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f4f7f6;
-            color: #333;
+            font-family: var(--font-body);
+            background: var(--bg-main);
+            color: var(--text-dark);
             margin: 0;
-            padding: 2rem;
+            padding: 0;
+            min-height: 100vh;
         }
-        .slide-content p {
+
+        /* Premium Header */
+        header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 4vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-logo {
             font-family: var(--font-heading);
-            font-size: 2rem;
-            color: var(--neon-green);
-            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: var(--text-dark);
         }
-        h1 { margin-top: 0; }
+
+        .header-logo span {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-family: var(--font-body);
+            font-weight: 400;
+            letter-spacing: 0;
+            margin-left: 0.5rem;
+        }
+
+        /* Tabs System */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 1.5rem;
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        /* Main Container */
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 2rem;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 4vw 5rem 4vw;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Panels & Cards */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .section {
+            padding: 2.5rem;
             margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
         }
-        .section h2 { margin-top: 0; color: #0056b3; }
+
+        .panel-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .panel-subtitle {
+            color: var(--text-muted);
+            margin-top: -1.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dark);
         }
-        input[type="text"] {
+
+        input[type="text"], 
+        input[type="number"],
+        select, 
+        textarea {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ccc;
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             box-sizing: border-box;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            background: #fafafa;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
         }
-        button {
-            background: #0056b3;
-            color: #fff;
-            padding: 1rem 2rem;
-            border: none;
+
+        input[type="text"]:focus, 
+        input[type="number"]:focus,
+        select:focus, 
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        /* Buttons & Actions */
+        .btn {
+            background: var(--accent);
+            color: #ffffff;
+            padding: 0.85rem 2rem;
+            border: 1px solid var(--accent);
             border-radius: 4px;
-            font-size: 1.1rem;
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             cursor: pointer;
-            width: 100%;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        button:hover {
-            background: #004494;
+
+        .btn:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: translateY(-2px);
         }
-        #message {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 4px;
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-main);
+            border-color: var(--text-dark);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            border-color: var(--error);
+        }
+
+        .btn-danger:hover {
+            background: #bd2130;
+            border-color: #bd2130;
+        }
+
+        /* Media Upload Wrapper */
+        .upload-wrapper {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .upload-wrapper input[type="file"] {
             display: none;
         }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        
-        .work-slide {
-            background: #f9f9f9;
-            padding: 1rem;
-            margin-bottom: 1rem;
+
+        .upload-btn {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.25rem;
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
             border-radius: 4px;
-            border: 1px solid #ddd;
+            white-space: nowrap;
+        }
+
+        .upload-btn:hover {
+            background: var(--border-color);
+        }
+
+        /* Card Sections */
+        .card-row {
+            background: #fdfdfd;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        /* Drag-and-Drop Area */
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: var(--bg-main);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent);
+            background: #ffffff;
+        }
+
+        .dropzone-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .dropzone p {
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        .dropzone span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Book grid styling */
+        .books-manager-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .book-manager-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .book-manager-card:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transform: translateY(-5px);
+        }
+
+        .book-card-top {
+            display: flex;
+            padding: 1rem;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+
+        .book-card-cover {
+            width: 70px;
+            height: 105px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #000000;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .book-card-cover.no-image::after {
+            content: '📖';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+        }
+
+        .book-card-meta {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0; /* Enable text clipping */
+        }
+
+        .book-card-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            margin: 0 0 0.3rem 0;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .book-card-author {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .book-card-rating {
+            color: var(--gold);
+            font-size: 0.9rem;
+            margin: 0.4rem 0;
+        }
+
+        .book-card-shelf {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            background: var(--bg-main);
+            border-radius: 3px;
+            width: max-content;
+        }
+
+        .book-card-actions {
+            background: var(--bg-main);
+            border-top: 1px solid var(--border-color);
+            padding: 0.6rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .book-card-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-text-only {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.2rem;
+        }
+
+        .btn-text-only:hover {
+            color: var(--text-dark);
+        }
+
+        .highlight-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 2px;
+            font-weight: 700;
+        }
+
+        /* Importer Preview Table */
+        .preview-wrapper {
+            margin-top: 1.5rem;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: var(--bg-main);
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .preview-table td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .preview-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Floating Notifications */
+        #message {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .success { background: #d4edda; color: #155724; border-left: 5px solid var(--success); }
+        .error { background: #f8d7da; color: #721c24; border-left: 5px solid var(--error); }
+
+        /* Floating Modal Form */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-body {
+            background: var(--panel-bg);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal.active .modal-body {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .modal-content {
+            padding: 2rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            background: var(--bg-main);
+        }
+
+        /* Filter Row */
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .shelf-tabs {
+            display: flex;
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.2rem;
+        }
+
+        .shelf-tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .shelf-tab-btn.active {
+            background: #ffffff;
+            color: var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .search-input {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        /* Importer Preview Stat Counter */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-rating {
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.15rem 0.35rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
+<header>
+    <div class="header-logo">SP / AI <span>Portfolio Asset CMS</span></div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('general')">General Settings</button>
+        <button class="tab-btn" onclick="switchTab('library')">Library Sync & Books</button>
+    </div>
+</header>
+
 <div class="container">
-    <h1>Site Asset Manager</h1>
-    <p>Update your portfolio content without touching any code. Save changes and reload your site to see updates.</p>
 
-    <div id="form-container">Loading...</div>
+    <!-- GENERAL CONTENT TAB -->
+    <div id="general-tab" class="tab-content active">
+        <p style="color: var(--text-muted); margin-top: 0; margin-bottom: 2rem;">Update biography highlights, projects, timeline, skills, and gameplay details here.</p>
+        <div id="form-container">Loading site config...</div>
+        <button class="btn" style="margin-top: 1rem;" onclick="saveConfig()">Save Changes</button>
+    </div>
 
-    <button id="saveBtn" style="display:none;" onclick="saveConfig()">Save Changes</button>
-    <div id="message"></div>
+    <!-- LIBRARY SYNC & BOOKS TAB -->
+    <div id="library-tab" class="tab-content">
+        <p style="color: var(--text-muted); margin-top: 0; margin-bottom: 2rem;">Manage your Fable & Goodreads book library. Sync via uploaded CSV spreadsheets or catalog manually.</p>
+        
+        <!-- SECTION 1: Sync Options -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Sync Controls & Configuration</h2>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="books-sync-source">Sync Strategy</label>
+                    <select id="books-sync-source" onchange="toggleSyncSourceView(this.value)">
+                        <option value="manual">Manual Cataloging / Fable CSV Upload</option>
+                        <option value="goodreads">Goodreads Live RSS Sync (Automatic Scraper)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="books-section-title">Section Headline (Title)</label>
+                    <input type="text" id="books-section-title" placeholder="BOOKS // FABLE">
+                </div>
+                <div class="form-group full-width" id="sync-notice-box" style="background: #eaf6ff; border-left: 4px solid #0056b3; padding: 1rem; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #004085;">
+                        <strong>💡 Sync Policy:</strong> When set to <strong>Manual / Fable CSV Upload</strong>, your local Express server will <strong>disable</strong> background Goodreads RSS scraping. This prevents automatic scrapes from overwriting your curated Fable library or manual additions.
+                    </p>
+                </div>
+            </div>
+            <button class="btn" onclick="saveBooksConfigOnly()">Save Configuration</button>
+        </div>
+
+        <!-- SECTION 2: CSV Importer -->
+        <div class="panel" id="csv-importer-panel">
+            <div class="panel-header">
+                <h2>Fable & Goodreads CSV Importer</h2>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Export from Fable (via Chrome extension) or Goodreads CSV files.
+                </div>
+            </div>
+            
+            <div class="panel-subtitle">
+                Upload a <code>.csv</code> spreadsheet containing columns like <strong>Title</strong>, <strong>Author</strong>, <strong>My Rating</strong>, <strong>Exclusive Shelf</strong>, and <strong>ISBN</strong>. The engine will parse your library and automatically query the <strong>Open Library API</strong> to resolve and cache high-resolution book covers instantly!
+            </div>
+
+            <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file-input').click()">
+                <span class="dropzone-icon">📥</span>
+                <p>Drag and drop your Fable/Goodreads CSV file here or click to browse</p>
+                <span>Supports .csv files up to 10MB</span>
+                <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+            </div>
+
+            <!-- Importer Preview -->
+            <div id="importer-preview-area" style="display: none;">
+                <div class="panel-header" style="border: none; padding-bottom: 0; margin-bottom: 1rem;">
+                    <h3>Parsed Books Preview</h3>
+                    <div class="btn-group" style="display:flex; gap: 0.5rem;">
+                        <select id="import-merge-mode" style="width: auto; padding: 0.5rem 1rem;">
+                            <option value="replace">Wipe Shelf & Replace Existing</option>
+                            <option value="merge">Merge (Keep Current & Add New)</option>
+                        </select>
+                        <button class="btn" style="padding: 0.6rem 1.5rem;" onclick="applyImportedBooks()">Apply Import</button>
+                        <button class="btn btn-secondary btn-danger btn-small" style="padding: 0.6rem 1.5rem;" onclick="clearImportPreview()">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-total">0</span>
+                        <span class="stat-label">Total Parsed</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-read">0</span>
+                        <span class="stat-label">Read</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-reading">0</span>
+                        <span class="stat-label">Reading</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="stat-covers">0</span>
+                        <span class="stat-label">Auto-Covers Cached</span>
+                    </div>
+                </div>
+
+                <div class="preview-wrapper">
+                    <table class="preview-table" id="preview-table">
+                        <thead>
+                            <tr>
+                                <th width="60">Cover</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th width="120">Shelf</th>
+                                <th width="100">Rating</th>
+                                <th width="150">ISBN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-tbody">
+                            <!-- JS will inject parsed books -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Bookshelf Cataloger -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Interactive Bookshelf Cataloger</h2>
+                <button class="btn btn-secondary" onclick="openAddBookModal()">+ Add New Book</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="shelf-tabs">
+                    <button class="shelf-tab-btn active" onclick="filterShelf('all')">All Books (<span id="count-all">0</span>)</button>
+                    <button class="shelf-tab-btn" onclick="filterShelf('read')">Read (<span id="count-read">0</span>)</button>
+                    <button class="shelf-tab-btn" onclick="filterShelf('currently-reading')">Reading (<span id="count-reading-mgr">0</span>)</button>
+                    <button class="shelf-tab-btn" onclick="filterShelf('to-read')">To Read (<span id="count-toread">0</span>)</button>
+                </div>
+                
+                <input type="text" class="search-input" id="book-search" placeholder="🔍 Search books by title or author..." oninput="renderBookshelfGrid()">
+            </div>
+
+            <div class="books-manager-grid" id="bookshelf-grid">
+                <!-- JS will inject book cards -->
+            </div>
+        </div>
+
+    </div>
+
 </div>
+
+<!-- MANUAL BOOK CREATOR/EDITOR MODAL -->
+<div class="modal" id="book-modal">
+    <div class="modal-body">
+        <div class="modal-header">
+            <h3 id="modal-title">Add New Book</h3>
+            <button class="modal-close" onclick="closeBookModal()">×</button>
+        </div>
+        <div class="modal-content">
+            <input type="hidden" id="edit-book-index">
+            <div class="form-group">
+                <label for="book-title">Book Title*</label>
+                <input type="text" id="book-title" placeholder="e.g. Red Rising" required>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="book-author">Author*</label>
+                    <input type="text" id="book-author" placeholder="e.g. Pierce Brown" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-rating">Personal Rating (0-5 Stars)</label>
+                    <input type="number" id="book-rating" min="0" max="5" step="0.5" placeholder="e.g. 5">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="book-shelf">Reading Status</label>
+                    <select id="book-shelf">
+                        <option value="read">Read</option>
+                        <option value="currently-reading">Currently Reading</option>
+                        <option value="to-read">To Read</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="book-avg-rating">Average Platform Rating</label>
+                    <input type="number" id="book-avg-rating" min="0" max="5" step="0.01" placeholder="e.g. 4.26">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="book-cover">Cover Image URL</label>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="text" id="book-cover" placeholder="Paste image link or click auto-search lookup" style="flex-grow: 1;">
+                    <button class="btn btn-secondary btn-small" id="modal-cover-search-btn" onclick="triggerAutoCoverSearch()" style="padding: 0 1rem; height: 42px; font-size: 0.8rem; margin: 0; white-space: nowrap;">🔍 Auto-Search</button>
+                </div>
+                <div class="upload-wrapper">
+                    <button class="upload-btn" onclick="document.getElementById('book-cover-file').click()">Upload File</button>
+                    <input type="file" id="book-cover-file" accept="image/*" onchange="uploadBookCover(this)">
+                    <span id="book-cover-upload-status" style="font-size:0.85rem; color:var(--text-muted);">No file selected</span>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="book-isbn">ISBN / ISBN13 (For auto cover resolution)</label>
+                    <input type="text" id="book-isbn" placeholder="e.g. 97815839976">
+                </div>
+                <div class="form-group">
+                    <label for="book-url">Reference / Buy Link</label>
+                    <input type="text" id="book-url" placeholder="Goodreads, Fable, or Google Books URL">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="checkbox" id="book-highlight" style="width: auto; cursor: pointer; scale: 1.2;">
+                    <label for="book-highlight" style="margin: 0; cursor: pointer; font-weight: normal;">Featured / High Rated Book (Displays with gold border and 'TOP RATED' badge)</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
+            <button class="btn" id="modal-submit-btn" onclick="saveManualBook()">Add Book</button>
+        </div>
+    </div>
+</div>
+
+<div id="message"></div>
 
 <script>
     let siteConfig = null;
+    let currentShelfFilter = 'all';
+    let parsedCSVBooks = [];
 
-    async function loadConfig() {
-        const res = await fetch('/api/config');
-        siteConfig = await res.json();
-        renderForm();
+    // Swapping Navigation tabs
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (tab === 'general') {
+            document.querySelector('.tab-btn[onclick="switchTab(\'general\')"]').classList.add('active');
+            document.getElementById('general-tab').classList.add('active');
+        } else if (tab === 'library') {
+            document.querySelector('.tab-btn[onclick="switchTab(\'library\')"]').classList.add('active');
+            document.getElementById('library-tab').classList.add('active');
+            syncCountStats();
+            renderBookshelfGrid();
+        }
     }
 
-    function renderForm() {
+    // Toggle Sync Info display
+    function toggleSyncSourceView(val) {
+        const panel = document.getElementById('csv-importer-panel');
+        if (val === 'goodreads') {
+            panel.style.opacity = '0.5';
+            panel.style.pointerEvents = 'none';
+        } else {
+            panel.style.opacity = '1';
+            panel.style.pointerEvents = 'all';
+        }
+    }
+
+    // Load full config
+    async function loadConfig() {
+        try {
+            const res = await fetch('/api/config');
+            siteConfig = await res.json();
+            
+            // Populate General Form
+            renderGeneralForm();
+
+            // Populate Library Sync Controls
+            document.getElementById('books-sync-source').value = siteConfig.books_sync_source || 'manual';
+            document.getElementById('books-section-title').value = siteConfig.books_section_title || 'BOOKS // FABLE';
+            toggleSyncSourceView(siteConfig.books_sync_source || 'manual');
+            
+            // Render manual bookshelves
+            syncCountStats();
+            renderBookshelfGrid();
+        } catch (e) {
+            showNotification('Failed to load portfolio configurations.', 'error');
+        }
+    }
+
+    // Render original forms in the General Tab
+    function renderGeneralForm() {
         const container = document.getElementById('form-container');
         container.innerHTML = '';
 
         // Hero Section
         container.innerHTML += `
-            <div class="section">
-                <h2>Hero Section</h2>
-                <div class="form-group">
-                    <label>Line 1</label>
-                    <input type="text" id="hero-line1" value="${siteConfig.hero.line1}">
-                </div>
-                <div class="form-group">
-                    <label>Line 2 (Highlight)</label>
-                    <input type="text" id="hero-line2" value="${siteConfig.hero.line2}">
-                </div>
-                <div class="form-group">
-                    <label>Subtext</label>
-                    <input type="text" id="hero-subtext" value="${siteConfig.hero.subtext}">
+            <div class="panel">
+                <div class="panel-header"><h2>Hero Banner</h2></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Main Title (Line 1)</label>
+                        <input type="text" id="hero-line1" value="${siteConfig.hero.line1}">
+                    </div>
+                    <div class="form-group">
+                        <label>Highlight Line (Line 2)</label>
+                        <input type="text" id="hero-line2" value="${siteConfig.hero.line2}">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Subtext / Subtitle Tag</label>
+                        <input type="text" id="hero-subtext" value="${siteConfig.hero.subtext}">
+                    </div>
                 </div>
             </div>
         `;
 
-        // About Section
+        // About & Statement Section
         container.innerHTML += `
-            <div class="section">
-                <h2>About Section</h2>
+            <div class="panel">
+                <div class="panel-header"><h2>About & Professional Statement</h2></div>
                 <div class="form-group">
-                    <label>About Text</label>
-                    <textarea id="about-text" rows="4" style="width:100%;padding:0.8rem;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;font-family:inherit;font-size:1rem;resize:vertical;">${siteConfig.about}</textarea>
+                    <label>Brief Biography (About text)</label>
+                    <textarea id="about-text" rows="4">${siteConfig.about}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Manifesto Statement</label>
+                    <textarea id="man-text" rows="3">${siteConfig.manifesto.text}</textarea>
                 </div>
             </div>
         `;
 
-        // Manifesto
+        // Featured Parallax Section
         container.innerHTML += `
-            <div class="section">
-                <h2>Statement / Manifesto Text</h2>
-                <div class="form-group">
-                    <label>Full Text</label>
-                    <textarea id="man-text" rows="4" style="width:100%;padding:0.8rem;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;font-family:inherit;font-size:1rem;resize:vertical;">${siteConfig.manifesto.text}</textarea>
+            <div class="panel">
+                <div class="panel-header"><h2>Parallax Focal Section</h2></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Parallax Image URL</label>
+                        <input type="text" id="parallax-image" value="${siteConfig.parallax.image}">
+                    </div>
+                    <div class="form-group">
+                        <label>Parallax Header Overlay Text</label>
+                        <input type="text" id="parallax-title" value="${siteConfig.parallax.title}">
+                    </div>
                 </div>
             </div>
         `;
 
-        // Parallax
+        // Contact Information
         container.innerHTML += `
-            <div class="section">
-                <h2>Parallax Image Section</h2>
-                <div class="form-group">
-                    <label>Background Image URL</label>
-                    <input type="text" id="parallax-image" value="${siteConfig.parallax.image}">
-                </div>
-                <div class="form-group">
-                    <label>Overlay Title</label>
-                    <input type="text" id="parallax-title" value="${siteConfig.parallax.title}">
-                </div>
-            </div>
-        `;
-
-        // Contact
-        container.innerHTML += `
-            <div class="section">
-                <h2>Personal & Contact Information</h2>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="contact-name" value="${siteConfig.contact.name}">
-                </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="text" id="contact-email" value="${siteConfig.contact.email}">
-                </div>
-                <div class="form-group">
-                    <label>LinkedIn URL</label>
-                    <input type="text" id="contact-linkedin" value="${siteConfig.contact.linkedin}">
-                </div>
-                <div class="form-group">
-                    <label>Instagram URL</label>
-                    <input type="text" id="contact-instagram" value="${siteConfig.contact.instagram}">
-                </div>
-                <div class="form-group">
-                    <label>GitHub URL</label>
-                    <input type="text" id="contact-github" value="${siteConfig.contact.github}">
-                </div>
-                <div class="form-group">
-                    <label>Steam URL</label>
-                    <input type="text" id="contact-steam" value="${siteConfig.contact.steam}">
-                </div>
-                <div class="form-group">
-                    <label>CV Download URL (PDF Link)</label>
-                    <input type="text" id="contact-cv" value="${siteConfig.contact.cv_url}">
+            <div class="panel">
+                <div class="panel-header"><h2>Contact & Social Channels</h2></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="contact-name" value="${siteConfig.contact.name}">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="text" id="contact-email" value="${siteConfig.contact.email}">
+                    </div>
+                    <div class="form-group">
+                        <label>LinkedIn Link</label>
+                        <input type="text" id="contact-linkedin" value="${siteConfig.contact.linkedin}">
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram Link</label>
+                        <input type="text" id="contact-instagram" value="${siteConfig.contact.instagram}">
+                    </div>
+                    <div class="form-group">
+                        <label>GitHub Account Link</label>
+                        <input type="text" id="contact-github" value="${siteConfig.contact.github}">
+                    </div>
+                    <div class="form-group">
+                        <label>Steam Profile Link</label>
+                        <input type="text" id="contact-steam" value="${siteConfig.contact.steam}">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Resume CV Download URL (PDF format)</label>
+                        <input type="text" id="contact-cv" value="${siteConfig.contact.cv_url}">
+                    </div>
                 </div>
             </div>
         `;
 
-        // Work Slides
-        let workHtml = '<div class="section"><h2>Work Projects (Center Scroll)</h2>';
+        // Work Projects Slider
+        let workHtml = '<div class="panel"><div class="panel-header"><h2>Featured Works (Center Scroll Presentation)</h2></div>';
         siteConfig.work.forEach((w, i) => {
             workHtml += `
-                <div class="work-slide">
-                    <div class="form-group">
-                        <label>Project ${i+1} Title</label>
-                        <input type="text" id="work-${i}-title" value="${w.title}">
-                    </div>
-                    <div class="form-group">
-                        <label>Project ${i+1} Description</label>
-                        <input type="text" id="work-${i}-desc" value="${w.desc || ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>Project ${i+1} Number</label>
-                        <input type="text" id="work-${i}-number" value="${w.number}">
-                    </div>
-                    <div class="form-group">
-                        <label>Project ${i+1} Image URL (or upload below)</label>
-                        <input type="text" id="work-${i}-image" value="${w.image}">
-                        <input type="file" accept="image/*" style="margin-top: 0.5rem;" onchange="uploadImage(this, 'work-${i}-image')">
+                <div class="card-row">
+                    <h3 style="margin-top:0; font-family:var(--font-heading); font-size:1.3rem;">Project Slide #${i+1}</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Slide Title</label>
+                            <input type="text" id="work-${i}-title" value="${w.title}">
+                        </div>
+                        <div class="form-group">
+                            <label>Description text</label>
+                            <input type="text" id="work-${i}-desc" value="${w.desc || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Ordering Number (e.g. 01, 02)</label>
+                            <input type="text" id="work-${i}-number" value="${w.number}">
+                        </div>
+                        <div class="form-group">
+                            <label>Background Image URL</label>
+                            <input type="text" id="work-${i}-image" value="${w.image}">
+                            <div class="upload-wrapper">
+                                <button class="upload-btn" onclick="document.getElementById('work-${i}-file').click()">Upload Image</button>
+                                <input type="file" id="work-${i}-file" accept="image/*" onchange="uploadFieldImage(this, 'work-${i}-image')">
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -223,15 +1078,19 @@
         workHtml += '</div>';
         container.innerHTML += workHtml;
 
-        // Gallery
-        let galleryHtml = '<div class="section"><h2>Featured Gallery (Instagram Style)</h2>';
+        // Image Gallery Grid
+        let galleryHtml = '<div class="panel"><div class="panel-header"><h2>Featured Image Gallery (Minimalist Grid)</h2></div>';
         siteConfig.gallery.forEach((g, i) => {
             galleryHtml += `
-                <div class="work-slide">
+                <div class="card-row">
+                    <h3 style="margin-top:0; font-family:var(--font-heading); font-size:1.2rem;">Photo Card #${i+1}</h3>
                     <div class="form-group">
-                        <label>Photo ${i+1} Image URL (or upload below)</label>
+                        <label>Asset URL</label>
                         <input type="text" id="gallery-${i}-image" value="${g.image}">
-                        <input type="file" accept="image/*" style="margin-top: 0.5rem;" onchange="uploadImage(this, 'gallery-${i}-image')">
+                        <div class="upload-wrapper">
+                            <button class="upload-btn" onclick="document.getElementById('gallery-${i}-file').click()">Upload Image</button>
+                            <input type="file" id="gallery-${i}-file" accept="image/*" onchange="uploadFieldImage(this, 'gallery-${i}-image')">
+                        </div>
                     </div>
                 </div>
             `;
@@ -239,22 +1098,25 @@
         galleryHtml += '</div>';
         container.innerHTML += galleryHtml;
 
-        // GitHub Projects
-        let githubHtml = '<div class="section"><h2>Open Source // GitHub</h2>';
+        // Open Source / GitHub Cards
+        let githubHtml = '<div class="panel"><div class="panel-header"><h2>Open Source / Repository Spotlights</h2></div>';
         siteConfig.github_projects.forEach((p, i) => {
             githubHtml += `
-                <div class="work-slide">
-                    <div class="form-group">
-                        <label>Project ${i+1} Title</label>
-                        <input type="text" id="github-${i}-title" value="${p.title}">
-                    </div>
-                    <div class="form-group">
-                        <label>Project ${i+1} Description</label>
-                        <input type="text" id="github-${i}-desc" value="${p.desc}">
-                    </div>
-                    <div class="form-group">
-                        <label>Project ${i+1} URL</label>
-                        <input type="text" id="github-${i}-url" value="${p.url}">
+                <div class="card-row">
+                    <h3 style="margin-top:0; font-family:var(--font-heading); font-size:1.2rem;">Repo Card #${i+1}</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Repository Name</label>
+                            <input type="text" id="github-${i}-title" value="${p.title}">
+                        </div>
+                        <div class="form-group">
+                            <label>Short Pitch Description</label>
+                            <input type="text" id="github-${i}-desc" value="${p.desc}">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Repository Link</label>
+                            <input type="text" id="github-${i}-url" value="${p.url}">
+                        </div>
                     </div>
                 </div>
             `;
@@ -262,49 +1124,58 @@
         githubHtml += '</div>';
         container.innerHTML += githubHtml;
 
-        // Steam Games
-        let steamHtml = '<div class="section"><h2>Currently Playing // Steam</h2>';
+        // Steam Library Spotlight
+        let steamHtml = '<div class="panel"><div class="panel-header"><h2>Current Games (Steam Analytics Grid)</h2></div>';
         siteConfig.steam_games.forEach((g, i) => {
             steamHtml += `
-                <div class="work-slide">
-                    <div class="form-group">
-                        <label>Game ${i+1} Title</label>
-                        <input type="text" id="steam-${i}-title" value="${g.title}">
-                    </div>
-                    <div class="form-group">
-                        <label>Game ${i+1} Playtime/Hours</label>
-                        <input type="text" id="steam-${i}-hours" value="${g.hours}">
-                    </div>
-                    <div class="form-group">
-                        <label>Game ${i+1} Cover Image URL (or upload)</label>
-                        <input type="text" id="steam-${i}-image" value="${g.image}">
-                        <input type="file" accept="image/*" style="margin-top: 0.5rem;" onchange="uploadImage(this, 'steam-${i}-image')">
+                <div class="card-row">
+                    <h3 style="margin-top:0; font-family:var(--font-heading); font-size:1.2rem;">Game Spotlight #${i+1}</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Game Name</label>
+                            <input type="text" id="steam-${i}-title" value="${g.title}">
+                        </div>
+                        <div class="form-group">
+                            <label>Playtime hours summary (e.g. 500 hrs)</label>
+                            <input type="text" id="steam-${i}-hours" value="${g.hours}">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Library Card Banner URL (600x900 recommended)</label>
+                            <input type="text" id="steam-${i}-image" value="${g.image}">
+                            <div class="upload-wrapper">
+                                <button class="upload-btn" onclick="document.getElementById('steam-${i}-file').click()">Upload Banner</button>
+                                <input type="file" id="steam-${i}-file" accept="image/*" onchange="uploadFieldImage(this, 'steam-${i}-image')">
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
         });
         steamHtml += '</div>';
         container.innerHTML += steamHtml;
-
-        document.getElementById('saveBtn').style.display = 'block';
     }
 
+    // Save site modifications
     async function saveConfig() {
-        const btn = document.getElementById('saveBtn');
-        const msg = document.getElementById('message');
-        btn.innerText = 'Saving...';
+        const btn = document.querySelector('.btn[onclick="saveConfig()"]');
+        const originalText = btn.innerText;
+        btn.innerText = 'Saving Content...';
         btn.disabled = true;
 
+        // Compile Hero
         siteConfig.hero.line1 = document.getElementById('hero-line1').value;
         siteConfig.hero.line2 = document.getElementById('hero-line2').value;
         siteConfig.hero.subtext = document.getElementById('hero-subtext').value;
 
+        // Compile Bio
         siteConfig.about = document.getElementById('about-text').value;
         siteConfig.manifesto.text = document.getElementById('man-text').value;
 
+        // Compile Parallax
         siteConfig.parallax.image = document.getElementById('parallax-image').value;
         siteConfig.parallax.title = document.getElementById('parallax-title').value;
 
+        // Compile Contact
         siteConfig.contact.name = document.getElementById('contact-name').value;
         siteConfig.contact.email = document.getElementById('contact-email').value;
         siteConfig.contact.linkedin = document.getElementById('contact-linkedin').value;
@@ -313,22 +1184,26 @@
         siteConfig.contact.steam = document.getElementById('contact-steam').value;
         siteConfig.contact.cv_url = document.getElementById('contact-cv').value;
 
+        // Compile Gallery
         siteConfig.gallery.forEach((g, i) => {
             g.image = document.getElementById(`gallery-${i}-image`).value;
         });
 
+        // Compile Repos
         siteConfig.github_projects.forEach((p, i) => {
             p.title = document.getElementById(`github-${i}-title`).value;
             p.desc = document.getElementById(`github-${i}-desc`).value;
             p.url = document.getElementById(`github-${i}-url`).value;
         });
 
+        // Compile Steam
         siteConfig.steam_games.forEach((g, i) => {
             g.title = document.getElementById(`steam-${i}-title`).value;
             g.hours = document.getElementById(`steam-${i}-hours`).value;
             g.image = document.getElementById(`steam-${i}-image`).value;
         });
 
+        // Compile Slider Projects
         siteConfig.work.forEach((w, i) => {
             w.title = document.getElementById(`work-${i}-title`).value;
             w.desc = document.getElementById(`work-${i}-desc`).value;
@@ -336,6 +1211,33 @@
             w.image = document.getElementById(`work-${i}-image`).value;
         });
 
+        // Post Changes
+        const saved = await pushConfigChange();
+        if(saved) {
+            showNotification('Website highlights saved successfully!', 'success');
+        } else {
+            showNotification('Failed to save website highlights.', 'error');
+        }
+
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+
+    // Save only library configurations
+    async function saveBooksConfigOnly() {
+        siteConfig.books_sync_source = document.getElementById('books-sync-source').value;
+        siteConfig.books_section_title = document.getElementById('books-section-title').value;
+
+        const saved = await pushConfigChange();
+        if(saved) {
+            showNotification('Library configurations saved successfully!', 'success');
+        } else {
+            showNotification('Failed to save library configurations.', 'error');
+        }
+    }
+
+    // API Post helper
+    async function pushConfigChange() {
         try {
             const res = await fetch('/api/config', {
                 method: 'POST',
@@ -343,32 +1245,23 @@
                 body: JSON.stringify(siteConfig)
             });
             const data = await res.json();
-            if(data.success) {
-                msg.className = 'success';
-                msg.innerText = 'Settings saved successfully! You can now visit your site to see the updates.';
-                msg.style.display = 'block';
-            }
+            return data.success;
         } catch (e) {
-            msg.className = 'error';
-            msg.innerText = 'Failed to save settings.';
-            msg.style.display = 'block';
+            return false;
         }
-
-        btn.innerText = 'Save Changes';
-        btn.disabled = false;
-        setTimeout(() => { msg.style.display = 'none'; }, 5000);
     }
 
-    async function uploadImage(fileInput, targetId) {
+    // Field File Uploader helper
+    async function uploadFieldImage(fileInput, targetInputId) {
         if (!fileInput.files || fileInput.files.length === 0) return;
         
         const file = fileInput.files[0];
         const formData = new FormData();
         formData.append('image', file);
 
-        const targetInput = document.getElementById(targetId);
-        const originalValue = targetInput.value;
-        targetInput.value = 'Uploading...';
+        const targetInput = document.getElementById(targetInputId);
+        const originalVal = targetInput.value;
+        targetInput.value = 'Uploading asset...';
 
         try {
             const res = await fetch('/api/upload', {
@@ -378,19 +1271,700 @@
             const data = await res.json();
             if(data.success) {
                 targetInput.value = data.url;
+                showNotification('Asset uploaded successfully!', 'success');
             } else {
-                targetInput.value = originalValue;
-                alert('Upload failed: ' + data.error);
+                targetInput.value = originalVal;
+                showNotification('Upload failed: ' + data.error, 'error');
             }
         } catch (e) {
-            targetInput.value = originalValue;
-            alert('Upload failed.');
+            targetInput.value = originalVal;
+            showNotification('File upload failed on local server.', 'error');
         }
     }
 
-    // Initialize
+    // Floating notifications
+    function showNotification(text, type) {
+        const box = document.getElementById('message');
+        box.innerText = text;
+        box.className = type;
+        box.style.display = 'block';
+        setTimeout(() => {
+            box.style.display = 'none';
+        }, 4000);
+    }
+
+
+    /* =========================================================================
+       📚 LIBRARY MANAGER & CSV IMPORTER ENGINE
+       ========================================================================= */
+
+    // Recompute library stats
+    function syncCountStats() {
+        if(!siteConfig || !siteConfig.books) return;
+
+        const books = siteConfig.books;
+        const total = books.length;
+        const read = books.filter(b => b.reading_status === 'read').length;
+        const reading = books.filter(b => b.reading_status === 'currently-reading').length;
+        const toread = books.filter(b => b.reading_status === 'to-read').length;
+
+        document.getElementById('count-all').innerText = total;
+        document.getElementById('count-read').innerText = read;
+        document.getElementById('count-reading-mgr').innerText = reading;
+        document.getElementById('count-toread').innerText = toread;
+    }
+
+    // Filter active bookshelf category
+    function filterShelf(shelf) {
+        currentShelfFilter = shelf;
+        document.querySelectorAll('.shelf-tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const eventMap = {
+            'all': 1, 'read': 2, 'currently-reading': 3, 'to-read': 4
+        };
+        const activeIdx = eventMap[shelf] || 1;
+        document.querySelector(`.shelf-tab-btn:nth-child(${activeIdx})`).classList.add('active');
+        
+        renderBookshelfGrid();
+    }
+
+    // Render bookshelf visual list
+    function renderBookshelfGrid() {
+        const grid = document.getElementById('bookshelf-grid');
+        grid.innerHTML = '';
+
+        if(!siteConfig || !siteConfig.books || siteConfig.books.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted);">Your bookshelf is empty. Import a CSV or add books manually.</div>`;
+            return;
+        }
+
+        const query = document.getElementById('book-search').value.toLowerCase();
+        let filtered = siteConfig.books;
+
+        // Category filter
+        if(currentShelfFilter !== 'all') {
+            filtered = filtered.filter(b => b.reading_status === currentShelfFilter);
+        }
+
+        // Search query filter
+        if(query) {
+            filtered = filtered.filter(b => 
+                (b.title && b.title.toLowerCase().includes(query)) || 
+                (b.author && b.author.toLowerCase().includes(query))
+            );
+        }
+
+        if(filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted);">No books found matching search parameters.</div>`;
+            return;
+        }
+
+        filtered.forEach((book, filterIndex) => {
+            // Find its actual true index in config.books array
+            const trueIndex = siteConfig.books.indexOf(book);
+            
+            const ratingStars = book.user_rating ? '★'.repeat(Math.round(book.user_rating)) + '☆'.repeat(5 - Math.round(book.user_rating)) : 'No Rating';
+            const ratingLabel = book.user_rating ? `<span class="badge-rating">${book.user_rating} ★</span>` : '';
+            const highlightBadge = book.highlight ? `<span class="highlight-badge">FEATURED</span>` : '';
+            
+            const card = document.createElement('div');
+            card.className = 'book-manager-card';
+            card.innerHTML = `
+                <div class="book-card-top">
+                    <div class="book-card-cover" style="background-image: url('${book.cover_image}');"></div>
+                    <div class="book-card-meta">
+                        <h4 class="book-card-title">${book.title}</h4>
+                        <p class="book-card-author">by ${book.author}</p>
+                        <div class="book-card-rating">
+                            ${ratingStars} ${ratingLabel}
+                        </div>
+                        <div>
+                            <span class="book-card-shelf">${book.reading_status.replace('-', ' ')}</span>
+                            ${highlightBadge}
+                        </div>
+                    </div>
+                </div>
+                <div class="book-card-actions">
+                    <div class="book-card-buttons">
+                        <button class="btn btn-secondary btn-small" onclick="openEditBookModal(${trueIndex})">Edit</button>
+                        <button class="btn btn-secondary btn-danger btn-small" onclick="deleteBook(${trueIndex})">Delete</button>
+                    </div>
+                    <div style="display:flex; gap:0.2rem;">
+                        <button class="btn-text-only" title="Move Up" onclick="reorderBook(${trueIndex}, -1)">▲</button>
+                        <button class="btn-text-only" title="Move Down" onclick="reorderBook(${trueIndex}, 1)">▼</button>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Move books up/down in the display order
+    async function reorderBook(index, direction) {
+        const books = siteConfig.books;
+        const targetIndex = index + direction;
+
+        if(targetIndex < 0 || targetIndex >= books.length) return;
+
+        // Swap entries
+        const temp = books[index];
+        books[index] = books[targetIndex];
+        books[targetIndex] = temp;
+
+        const saved = await pushConfigChange();
+        if(saved) {
+            renderBookshelfGrid();
+        } else {
+            showNotification('Failed to save reordered list.', 'error');
+        }
+    }
+
+    // Manual Modal controls
+    function openAddBookModal() {
+        document.getElementById('modal-title').innerText = 'Add New Book';
+        document.getElementById('modal-submit-btn').innerText = 'Add Book';
+        document.getElementById('edit-book-index').value = '';
+        
+        // Reset inputs
+        document.getElementById('book-title').value = '';
+        document.getElementById('book-author').value = '';
+        document.getElementById('book-rating').value = '';
+        document.getElementById('book-shelf').value = 'read';
+        document.getElementById('book-avg-rating').value = '';
+        document.getElementById('book-cover').value = '';
+        document.getElementById('book-isbn').value = '';
+        document.getElementById('book-url').value = '';
+        document.getElementById('book-highlight').checked = false;
+        document.getElementById('book-cover-upload-status').innerText = 'No file selected';
+
+        document.getElementById('book-modal').classList.add('active');
+    }
+
+    function openEditBookModal(index) {
+        const book = siteConfig.books[index];
+
+        document.getElementById('modal-title').innerText = 'Edit Book Details';
+        document.getElementById('modal-submit-btn').innerText = 'Save Changes';
+        document.getElementById('edit-book-index').value = index;
+
+        document.getElementById('book-title').value = book.title || '';
+        document.getElementById('book-author').value = book.author || '';
+        document.getElementById('book-rating').value = book.user_rating || '';
+        document.getElementById('book-shelf').value = book.reading_status || 'read';
+        document.getElementById('book-avg-rating').value = book.average_rating || '';
+        document.getElementById('book-cover').value = book.cover_image || '';
+        document.getElementById('book-isbn').value = book.isbn || '';
+        document.getElementById('book-url').value = book.goodreads_url || '';
+        document.getElementById('book-highlight').checked = !!book.highlight;
+        document.getElementById('book-cover-upload-status').innerText = 'No file selected';
+
+        document.getElementById('book-modal').classList.add('active');
+    }
+
+    function closeBookModal() {
+        document.getElementById('book-modal').classList.remove('active');
+    }
+
+    // Manual Upload Cover helper
+    async function uploadBookCover(fileInput) {
+        if (!fileInput.files || fileInput.files.length === 0) return;
+        
+        const file = fileInput.files[0];
+        const label = document.getElementById('book-cover-upload-status');
+        label.innerText = 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('book-cover').value = data.url;
+                label.innerText = 'Upload successful!';
+                showNotification('Cover image uploaded successfully!', 'success');
+            } else {
+                label.innerText = 'Upload failed';
+                showNotification('Upload failed: ' + data.error, 'error');
+            }
+        } catch (e) {
+            label.innerText = 'Error';
+            showNotification('Cover image upload failed.', 'error');
+        }
+    }
+
+    // Manual additions & updates
+    async function saveManualBook() {
+        const title = document.getElementById('book-title').value.trim();
+        const author = document.getElementById('book-author').value.trim();
+        
+        if(!title || !author) {
+            alert('Book Title and Author are mandatory fields.');
+            return;
+        }
+
+        const ratingVal = document.getElementById('book-rating').value;
+        const avgVal = document.getElementById('book-avg-rating').value;
+        const isbn = document.getElementById('book-isbn').value.trim();
+        let cover = document.getElementById('book-cover').value.trim();
+        
+        // Auto-resolve cover using Open Library Covers API if empty and ISBN is given
+        if(!cover && isbn) {
+            cover = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
+        }
+        if(!cover) {
+            cover = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80';
+        }
+
+        const editIndexStr = document.getElementById('edit-book-index').value;
+
+        const bookObj = {
+            title: title,
+            author: author,
+            average_rating: avgVal ? parseFloat(avgVal) : null,
+            user_rating: ratingVal ? parseFloat(ratingVal) : null,
+            cover_image: cover,
+            isbn: isbn,
+            goodreads_url: document.getElementById('book-url').value.trim(),
+            reading_status: document.getElementById('book-shelf').value,
+            highlight: document.getElementById('book-highlight').checked,
+            date_added: new Date().toISOString().split('T')[0],
+            tags: [],
+            display_priority: ratingVal >= 4 ? 'high' : (ratingVal ? 'medium' : 'low')
+        };
+
+        if(editIndexStr !== '') {
+            // Edit Mode
+            const idx = parseInt(editIndexStr);
+            // Retain original added dates or tags if available
+            bookObj.date_added = siteConfig.books[idx].date_added || bookObj.date_added;
+            bookObj.tags = siteConfig.books[idx].tags || [];
+            siteConfig.books[idx] = bookObj;
+        } else {
+            // Add Mode
+            if(!siteConfig.books) siteConfig.books = [];
+            siteConfig.books.unshift(bookObj); // Prepend to the shelf
+        }
+
+        const saved = await pushConfigChange();
+        if(saved) {
+            closeBookModal();
+            syncCountStats();
+            renderBookshelfGrid();
+            showNotification('Bookshelf updated successfully!', 'success');
+        } else {
+            showNotification('Failed to update bookshelf.', 'error');
+        }
+    }
+
+    // Manual Deletion
+    async function deleteBook(index) {
+        if(!confirm(`Are you sure you want to remove "${siteConfig.books[index].title}" from your library?`)) {
+            return;
+        }
+
+        siteConfig.books.splice(index, 1);
+        const saved = await pushConfigChange();
+        if(saved) {
+            syncCountStats();
+            renderBookshelfGrid();
+            showNotification('Book removed successfully.', 'success');
+        } else {
+            showNotification('Failed to delete book entry.', 'error');
+        }
+    }
+
+
+    /* =========================================================================
+       CSV Uploader / Parser Client Engine
+       ========================================================================= */
+
+    // Drag over effects
+    const dropzone = document.getElementById('csv-dropzone');
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            processCSVFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    function handleFileSelect(event) {
+        if(event.target.files && event.target.files.length > 0) {
+            processCSVFile(event.target.files[0]);
+        }
+    }
+
+    // Auto-search and resolve cover image via Google Books Search & Open Library APIs
+    async function resolveCoverUrl(book) {
+        // A. Use CSV cover if already present and valid
+        if (book.cover_image && book.cover_image.startsWith('http') && !book.cover_image.includes('unsplash.com')) {
+            return book.cover_image;
+        }
+
+        // B. Try Goodreads Book ID on Open Library Covers (Fast, Free, Precise unique number search)
+        const gid = book.goodreads_id || (book.goodreads_url ? (book.goodreads_url.match(/show\/(\d+)/) || [])[1] : '');
+        if (gid) {
+            // Test Goodreads Cover URL
+            const url = `https://covers.openlibrary.org/b/goodreads/${gid}-L.jpg`;
+            try {
+                // Quick head check or simple resolution URL mapping
+                return url;
+            } catch (e) {}
+        }
+
+        // C. Try ISBN on Open Library Covers (Fast, Free, Precise unique number search)
+        if (book.isbn && book.isbn.length >= 9) {
+            return `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`;
+        }
+
+        // D. Try Google Books Search API using Title + Author (Highly reliable fallback search)
+        if (book.title && book.title !== 'Unknown Title') {
+            try {
+                // Clean title: Strip series info (e.g. "Red Rising (Red Rising Saga, #1)" -> "Red Rising")
+                let cleanTitle = book.title.replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '');
+                // Strip long subtitles after colons/dashes to simplify the query
+                if (cleanTitle.includes(':') && cleanTitle.length > 25) {
+                    cleanTitle = cleanTitle.split(':')[0];
+                }
+                if (cleanTitle.includes(' -') && cleanTitle.length > 25) {
+                    cleanTitle = cleanTitle.split(' -')[0];
+                }
+                cleanTitle = cleanTitle.trim();
+
+                const query = encodeURIComponent(`intitle:${cleanTitle} inauthor:${book.author || ''}`);
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    const volumeInfo = data.items[0].volumeInfo;
+                    if (volumeInfo.imageLinks) {
+                        let cover = volumeInfo.imageLinks.thumbnail || volumeInfo.imageLinks.smallThumbnail || volumeInfo.imageLinks.medium || volumeInfo.imageLinks.large;
+                        if (cover) {
+                            return cover.replace('http://', 'https://'); // Enforce https
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Google Books cover lookup failed for:', book.title, e);
+            }
+        }
+
+        // Return beautiful Unsplash default texture fallback
+        return 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80';
+    }
+
+    // Modal triggered cover auto-search
+    async function triggerAutoCoverSearch() {
+        const title = document.getElementById('book-title').value.trim();
+        const author = document.getElementById('book-author').value.trim();
+        const isbn = document.getElementById('book-isbn').value.trim();
+        const bookUrl = document.getElementById('book-url').value.trim();
+        
+        if (!title && !isbn) {
+            alert('Please enter at least the Book Title or ISBN to perform an auto-search.');
+            return;
+        }
+
+        const btn = document.getElementById('modal-cover-search-btn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Resolving...';
+        btn.disabled = true;
+
+        const tempBook = {
+            title: title,
+            author: author,
+            isbn: isbn,
+            goodreads_url: bookUrl
+        };
+
+        const resolved = await resolveCoverUrl(tempBook);
+        if (resolved && !resolved.includes('unsplash.com')) {
+            document.getElementById('book-cover').value = resolved;
+            showNotification('Cover resolved successfully!', 'success');
+        } else {
+            showNotification('No custom cover resolved. Defaulted to catalog placeholder.', 'error');
+        }
+
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+
+    // Parse logic trigger
+    async function processCSVFile(file) {
+        if(file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+            showNotification('Please upload a valid CSV file.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const text = e.target.result;
+            try {
+                // Show dynamic loading bar in the dropzone
+                const dropzone = document.getElementById('csv-dropzone');
+                dropzone.innerHTML = `
+                    <span class="dropzone-icon">⏳</span>
+                    <p id="loading-status">Parsing CSV library file...</p>
+                    <div style="width: 80%; background: #eee; height: 8px; border-radius: 4px; margin: 1rem auto; overflow: hidden; position: relative;">
+                        <div id="loading-bar" style="background: var(--accent); height: 100%; width: 0%; transition: width 0.1s ease;"></div>
+                    </div>
+                    <span id="loading-details">Please wait...</span>
+                `;
+                dropzone.style.pointerEvents = 'none';
+
+                parsedCSVBooks = parseAndResolveCSV(text);
+                if(parsedCSVBooks.length === 0) {
+                    showNotification('No valid book entries identified in this CSV.', 'error');
+                    resetDropzoneHTML();
+                    return;
+                }
+
+                // Resolve all covers asynchronously in concurrent batches to avoid flooding public APIs
+                const total = parsedCSVBooks.length;
+                const batchSize = 5;
+                let resolvedCount = 0;
+
+                for (let i = 0; i < total; i += batchSize) {
+                    const batch = parsedCSVBooks.slice(i, i + batchSize);
+                    await Promise.all(batch.map(async (book) => {
+                        book.cover_image = await resolveCoverUrl(book);
+                        resolvedCount++;
+                        
+                        const pct = Math.round((resolvedCount / total) * 100);
+                        document.getElementById('loading-status').innerText = `Resolving covers: ${resolvedCount} / ${total} completed...`;
+                        document.getElementById('loading-bar').style.width = `${pct}%`;
+                        document.getElementById('loading-details').innerText = `Resolving "${book.title.substring(0, 28)}"...`;
+                    }));
+                }
+
+                renderImportPreview();
+                resetDropzoneHTML();
+            } catch (err) {
+                console.error(err);
+                showNotification('Parsing failed. Ensure the CSV is formatted properly.', 'error');
+                resetDropzoneHTML();
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetDropzoneHTML() {
+        const dropzone = document.getElementById('csv-dropzone');
+        dropzone.style.pointerEvents = 'all';
+        dropzone.innerHTML = `
+            <span class="dropzone-icon">📥</span>
+            <p>Drag and drop your Fable/Goodreads CSV file here or click to browse</p>
+            <span>Supports .csv files up to 10MB</span>
+            <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+        `;
+    }
+
+    // Parser engine
+    function parseAndResolveCSV(text) {
+        const rows = [];
+        let curRow = [""];
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            const next = text[i+1];
+            if (c === '"') {
+                if (inQuotes && next === '"') {
+                    curRow[curRow.length - 1] += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c === ',' && !inQuotes) {
+                curRow.push('');
+            } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                if (c === '\r' && next === '\n') { i++; }
+                rows.push(curRow);
+                curRow = [''];
+            } else {
+                curRow[curRow.length - 1] += c;
+            }
+        }
+        if (curRow.length > 1 || curRow[0] !== '') {
+            rows.push(curRow);
+        }
+        
+        if (rows.length === 0) return [];
+        
+        // Match columns
+        const headers = rows[0].map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+        const bookData = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+            const values = rows[i];
+            if (values.length < headers.length) continue;
+            const obj = {};
+            for (let j = 0; j < headers.length; j++) {
+                let val = values[j] ? values[j].trim() : '';
+                // Resolve clean quotes
+                if (val.startsWith('="') && val.endsWith('"')) {
+                    val = val.substring(2, val.length - 1);
+                } else if (val.startsWith('"') && val.endsWith('"')) {
+                    val = val.substring(1, val.length - 1);
+                }
+                obj[headers[j]] = val;
+            }
+            
+            // Map row to book schema
+            const bookItem = mapCSVRowToBook(obj);
+            if(bookItem.title && bookItem.title !== 'Unknown Title') {
+                bookData.push(bookItem);
+            }
+        }
+        return bookData;
+    }
+
+    // Convert CSV Row items
+    function mapCSVRowToBook(row) {
+        const title = row['title'] || 'Unknown Title';
+        let author = row['author'] || 'Unknown Author';
+        
+        if (row['author l-f'] && (!author || author === 'Unknown Author' || author.includes(','))) {
+            const parts = row['author l-f'].split(',').map(p => p.trim());
+            if (parts.length === 2) {
+                author = `${parts[1]} ${parts[0]}`;
+            }
+        }
+
+        let shelfStatus = 'read';
+        const shelf = row['exclusive shelf'] || row['bookshelves'] || 'read';
+        if (shelf.toLowerCase().includes('reading') || shelf.toLowerCase().includes('current')) {
+            shelfStatus = 'currently-reading';
+        } else if (shelf.toLowerCase().includes('to-read') || shelf.toLowerCase().includes('want')) {
+            shelfStatus = 'to-read';
+        }
+
+        const myRating = row['my rating'] ? parseFloat(row['my rating']) : 0;
+        const avgRating = row['average rating'] ? parseFloat(row['average rating']) : 0;
+        const isbn = row['isbn13'] || row['isbn'] || '';
+        const bookId = row['book id'] || '';
+        const goodreadsUrl = bookId ? `https://www.goodreads.com/book/show/${bookId}` : '';
+
+        return {
+            title: title,
+            author: author,
+            average_rating: avgRating || null,
+            user_rating: myRating || null,
+            cover_image: row['cover_image'] || row['cover url'] || row['cover_url'] || row['image url'] || row['image_url'] || row['cover'] || row['image'] || '',
+            isbn: isbn,
+            goodreads_id: bookId,
+            goodreads_url: goodreadsUrl,
+            reading_status: shelfStatus,
+            date_added: new Date().toISOString().split('T')[0],
+            tags: shelfStatus === 'read' ? ['imported'] : [],
+            display_priority: myRating >= 4 ? 'high' : (myRating ? 'medium' : 'low'),
+            highlight: myRating >= 4.5
+        };
+    }
+
+    // Display Importer Preview GUI
+    function renderImportPreview() {
+        const container = document.getElementById('importer-preview-area');
+        const tbody = document.getElementById('preview-tbody');
+        tbody.innerHTML = '';
+
+        document.getElementById('stat-total').innerText = parsedCSVBooks.length;
+        document.getElementById('stat-read').innerText = parsedCSVBooks.filter(b => b.reading_status === 'read').length;
+        document.getElementById('stat-reading').innerText = parsedCSVBooks.filter(b => b.reading_status === 'currently-reading').length;
+        
+        const withCoversCount = parsedCSVBooks.filter(b => b.isbn).length;
+        document.getElementById('stat-covers').innerText = withCoversCount;
+
+        // Render first 20 items for lightweight preview rendering
+        const displayLimit = Math.min(parsedCSVBooks.length, 20);
+        
+        for (let i = 0; i < displayLimit; i++) {
+            const b = parsedCSVBooks[i];
+            const tr = document.createElement('tr');
+            
+            const coverImageCell = b.isbn 
+                ? `<div class="book-card-cover" style="width: 35px; height: 50px; background-image: url('${b.cover_image}');"></div>` 
+                : `<div class="book-card-cover no-image" style="width: 35px; height: 50px;"></div>`;
+            
+            tr.innerHTML = `
+                <td>${coverImageCell}</td>
+                <td><strong>${b.title}</strong></td>
+                <td>by ${b.author}</td>
+                <td><span class="book-card-shelf">${b.reading_status.replace('-', ' ')}</span></td>
+                <td><span class="badge-rating">${b.user_rating || '—'} ★</span></td>
+                <td><code style="font-size:0.8rem;">${b.isbn || 'No ISBN'}</code></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        if(parsedCSVBooks.length > 20) {
+            const remainder = parsedCSVBooks.length - 20;
+            const extraTr = document.createElement('tr');
+            extraTr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">...and ${remainder} more books parsed successfully.</td>`;
+            tbody.appendChild(extraTr);
+        }
+
+        container.style.display = 'block';
+        document.getElementById('csv-dropzone').style.display = 'none';
+        
+        // Scroll down dynamically to import preview
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Cancel import helper
+    function clearImportPreview() {
+        document.getElementById('importer-preview-area').style.display = 'none';
+        document.getElementById('csv-dropzone').style.display = 'block';
+        document.getElementById('csv-file-input').value = '';
+        parsedCSVBooks = [];
+    }
+
+    // Push imported items to config.json
+    async function applyImportedBooks() {
+        if(parsedCSVBooks.length === 0) return;
+
+        const mode = document.getElementById('import-merge-mode').value;
+        const btn = document.querySelector('.btn[onclick="applyImportedBooks()"]');
+        const originalText = btn.innerText;
+
+        btn.innerText = 'Importing...';
+        btn.disabled = true;
+
+        if(mode === 'replace') {
+            // Overwrite array
+            siteConfig.books = parsedCSVBooks;
+        } else {
+            // Append array
+            if(!siteConfig.books) siteConfig.books = [];
+            siteConfig.books = parsedCSVBooks.concat(siteConfig.books);
+        }
+
+        const saved = await pushConfigChange();
+        if(saved) {
+            showNotification(`Imported ${parsedCSVBooks.length} books successfully!`, 'success');
+            clearImportPreview();
+            syncCountStats();
+            renderBookshelfGrid();
+        } else {
+            showNotification('Failed to apply import list.', 'error');
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+
+    /* Initialize CMS */
     loadConfig();
 </script>
-
 </body>
 </html>

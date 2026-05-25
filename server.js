@@ -24,12 +24,24 @@ const CACHE_TTL = 3600 * 1000; // 1 hour
 let lastUpdate = 0;
 
 async function syncGoodreads() {
+    const configPath = path.join(__dirname, 'config.json');
+    let config;
+    try {
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch (err) {
+        console.error('Failed to read config for sync check:', err);
+        return;
+    }
+
+    if (config.books_sync_source && config.books_sync_source !== 'goodreads') {
+        console.log(`Goodreads background sync skipped because books_sync_source is '${config.books_sync_source}'`);
+        return;
+    }
+
     console.log('Syncing with Goodreads...');
     try {
         const books = await getAllBooks(GOODREADS_USER_ID);
         if (books && books.length > 0) {
-            const configPath = path.join(__dirname, 'config.json');
-            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
             config.books = books;
             fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
             lastUpdate = Date.now();
@@ -123,9 +135,13 @@ function renderIndex(res) {
         const statusLabel = b.reading_status ? `<span class="status-badge">${b.reading_status.replace('-', ' ')}</span>` : '';
         const highlightClass = b.highlight ? 'highlight-book' : '';
         const hiddenClass = index >= 6 ? ' hidden-book' : '';
+        
+        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http')) 
+            ? b.goodreads_url 
+            : `https://www.google.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
 
         booksHtml += `
-        <a href="${b.goodreads_url}" target="_blank" class="book-card ${highlightClass}${hiddenClass}">
+        <a href="${bookUrl}" target="_blank" class="book-card ${highlightClass}${hiddenClass}">
             <div class="book-image" style="background-image: url('${b.cover_image}');"></div>
             <div class="book-overlay">
                 <div class="book-details">
@@ -141,6 +157,7 @@ function renderIndex(res) {
         `;
     });
     html = html.replace('{{BOOKS_ITEMS}}', booksHtml);
+    html = html.replace('{{BOOKS_SECTION_TITLE}}', config.books_section_title || 'BOOKS // GOODREADS');
 
     // Replace Gallery
     let galleryHtml = '';
@@ -178,8 +195,11 @@ function renderIndex(res) {
 // Routes
 app.get('/', async (req, res) => {
     try {
-        // Auto-refresh if cache expired
-        if (Date.now() - lastUpdate > CACHE_TTL) {
+        const configPath = path.join(__dirname, 'config.json');
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        // Auto-refresh if cache expired and Goodreads sync is active
+        if (config.books_sync_source === 'goodreads' && Date.now() - lastUpdate > CACHE_TTL) {
             syncGoodreads(); // Run in background
         }
         renderIndex(res);
