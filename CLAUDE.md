@@ -17,7 +17,19 @@ npm run deploy     # predeploy runs build, then `gh-pages -d dist` pushes dist/ 
 
 There are no tests and no linter configured.
 
-Deploy publishes to the `gh-pages` branch, served at `https://sidharthparihar.github.io/mysite/`. Source code lives on `main` and must be committed separately — deploying does not commit source. On Windows, `npm run deploy` can fail with `error: cannot spawn sh.exe` (a Git config issue); the fallback is `npm run build` followed by manually uploading `dist/` to the `gh-pages` branch.
+Deploy publishes to the `gh-pages` branch, served at `https://pariharsidharth0.github.io/mysite/`. Source code lives on `main` and must be committed separately — deploying does not commit source.
+
+**Deploy on Windows:** `npm run deploy` fails with `error: cannot spawn sh.exe` (a Git config issue with the `gh-pages` package). The standard workaround is:
+```bash
+npm run build                         # Compile dist/
+git checkout --orphan gh-pages        # Create fresh gh-pages branch
+git rm -rf . 2>/dev/null             # Clear it
+Copy-Item "dist\*" "." -Recurse      # Copy site files to root
+git add . && git commit -m "Deploy"   # Commit
+git push -u origin gh-pages          # Push
+git checkout main                     # Back to source
+```
+GitHub Pages refreshes within ~1 minute.
 
 ## Architecture
 
