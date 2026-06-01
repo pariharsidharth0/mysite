@@ -26,6 +26,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if(counter) counter.innerText = progress + "%";
     }, 50);
 
+    // --- Book Cover Fallback Handler ---
+    // Cover URLs are resolved at build time by scripts/fetch-covers.js and baked
+    // into config.json, so primaries almost always load. This is a last-resort
+    // safety net: if a cover 404s at view time, mark the tile so CSS can show a
+    // clean titled placeholder instead of an empty box.
+    document.querySelectorAll('.book-card .book-image').forEach(el => {
+        const url = el.style.backgroundImage.match(/url\(["']?([^"']+)["']?\)/)?.[1];
+        if (!url) {
+            el.classList.add('cover-missing');
+            return;
+        }
+        const probe = new Image();
+        probe.onerror = () => el.classList.add('cover-missing');
+        probe.src = url;
+    });
+
     // --- Lenis Smooth Scrolling Setup ---
     const lenis = new Lenis({
         duration: 1.2,

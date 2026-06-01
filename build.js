@@ -86,8 +86,8 @@ function build() {
         const highlightClass = b.highlight ? 'highlight-book' : '';
         const hiddenClass = index >= 6 ? ' hidden-book' : '';
 
-        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http')) 
-            ? b.goodreads_url 
+        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http'))
+            ? b.goodreads_url
             : `https://www.google.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
 
         booksHtml += `

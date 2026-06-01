@@ -135,9 +135,9 @@ function renderIndex(res) {
         const statusLabel = b.reading_status ? `<span class="status-badge">${b.reading_status.replace('-', ' ')}</span>` : '';
         const highlightClass = b.highlight ? 'highlight-book' : '';
         const hiddenClass = index >= 6 ? ' hidden-book' : '';
-        
-        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http')) 
-            ? b.goodreads_url 
+
+        const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http'))
+            ? b.goodreads_url
             : `https://www.google.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
 
         booksHtml += `
@@ -197,7 +197,7 @@ app.get('/', async (req, res) => {
     try {
         const configPath = path.join(__dirname, 'config.json');
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        
+
         // Auto-refresh if cache expired and Goodreads sync is active
         if (config.books_sync_source === 'goodreads' && Date.now() - lastUpdate > CACHE_TTL) {
             syncGoodreads(); // Run in background

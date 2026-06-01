@@ -13,6 +13,9 @@ npm install        # install dependencies
 npm start          # node server.js — dev server at http://localhost:8000 (+ /admin)
 npm run build      # node build.js — compiles config.json + index.html into dist/
 npm run deploy     # predeploy runs build, then `gh-pages -d dist` pushes dist/ to the gh-pages branch
+
+node scripts/fetch-covers.js        # resolve working book covers into config.json
+node scripts/fetch-covers.js --dry  # preview cover changes without writing
 ```
 
 There are no tests and no linter configured.
@@ -44,6 +47,20 @@ These two functions contain **duplicated, hand-copied template logic**. Any chan
 **Token replacement uses single `String.replace()` calls**, so each `{{PLACEHOLDER}}` may appear exactly once in `index.html`. Loop-rendered sections (experience, skills, books, steam, gallery, work slides) are built as concatenated HTML strings and injected into one placeholder each.
 
 **Books rendering has logic worth knowing** (identical in `server.js` and `build.js`): the first 6 books render visible; index ≥ 6 gets a `hidden-book` class toggled by the "SHOW ALL BOOKS" button in `script.js`. `highlight: true` adds a `highlight-book` class (renders a "TOP RATED" badge). Each card links to the book's `goodreads_url`, or falls back to a Google search URL when that field is empty.
+
+### Book cover resolution
+
+Each book's `cover_image` in `config.json` is a pre-resolved, known-good URL. **`scripts/fetch-covers.js` is the tool that produces those URLs** — run `node scripts/fetch-covers.js` whenever you add or edit books, then rebuild. It rewrites `config.json` in place (use `--dry` to preview).
+
+The non-obvious trap it exists to solve: `covers.openlibrary.org/b/isbn/{isbn}-L.jpg` returns a **blank placeholder image with HTTP 200** when OpenLibrary has no cover for that ISBN — so a tile renders empty and a naive "does the URL resolve?" check passes anyway. The script's per-book resolution order works around this:
+1. Direct ISBN cover, validated with `?default=false` (OpenLibrary then 404s instead of serving a blank).
+2. OpenLibrary **Search API** by ISBN → `cover_i` → `/b/id/{id}-L.jpg` (finds a cover from *any* edition of the work, so it succeeds even when the exact ISBN has none).
+3. OpenLibrary Search by title + author.
+4. Google Books (best-effort; its anonymous API frequently returns `429`, so it is only a last resort — do not make it the primary source).
+
+It only overwrites a `cover_image` when it finds something better, and leaves the existing value untouched when all sources miss. A few cover IDs are hand-pinned in `config.json` (the search picked a "cover to be revealed" / wrong-edition image) — prefer pinning a specific `/b/id/{cover_i}-L.jpg` over re-running the script for those.
+
+As a runtime safety net, `script.js` probes each rendered cover and adds a `.cover-missing` class on load failure; `style.css` then shows a styled "NO COVER" tile instead of an empty box. Covers are baked in at build time, so this rarely triggers.
 
 ### Goodreads sync
 

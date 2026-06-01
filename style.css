@@ -494,6 +494,27 @@ h1, h2, h3, .logo, .parallax-title {
     transform: scale(1.1);
 }
 
+/* Last-resort placeholder when a cover URL fails to load at view time.
+   JS adds .cover-missing in script.js; covers are normally baked in at build. */
+.book-image.cover-missing {
+    background-image: none !important;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-soft);
+    position: relative;
+}
+.book-image.cover-missing::after {
+    content: "NO COVER";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--neon-green);
+    opacity: 0.5;
+}
+
 .hidden-book {
     display: none;
 }
