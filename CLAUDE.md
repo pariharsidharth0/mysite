@@ -22,17 +22,39 @@ There are no tests and no linter configured.
 
 Deploy publishes to the `gh-pages` branch, served at `https://pariharsidharth0.github.io/mysite/`. Source code lives on `main` and must be committed separately — deploying does not commit source.
 
-**Deploy on Windows:** `npm run deploy` fails with `error: cannot spawn sh.exe` (a Git config issue with the `gh-pages` package). The standard workaround is:
-```bash
-npm run build                         # Compile dist/
-git checkout --orphan gh-pages        # Create fresh gh-pages branch
-git rm -rf . 2>/dev/null             # Clear it
-Copy-Item "dist\*" "." -Recurse      # Copy site files to root
-git add . && git commit -m "Deploy"   # Commit
-git push -u origin gh-pages          # Push
-git checkout main                     # Back to source
+**Deploy on Windows:** `npm run deploy` fails with `error: cannot spawn sh.exe` (a Git config issue with the `gh-pages` package). Deploy manually instead.
+
+The `gh-pages` branch already exists on the remote and holds a snapshot of the **whole repo tree** with the *built* `index.html` at the root — but GitHub Pages only actually serves four artifacts from the root: `index.html`, `script.js`, `style.css`, and `assets/`. So a correct deploy just overwrites those four with a fresh `dist/` build. Run from `main` with a clean working tree (commit source first):
+
+```powershell
+# 1. Build, then back dist/ up OUTSIDE the repo (insurance — see gotchas).
+npm run build
+$tmp = "$env:TEMP\mysite-deploy"
+if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
+Copy-Item "dist" $tmp -Recurse
+
+# 2. Switch to gh-pages and sync it to the remote.
+git checkout gh-pages
+git reset --hard origin/gh-pages
+
+# 3. Overwrite ONLY the served artifacts from the backup, then stage ONLY those.
+Copy-Item "$tmp\index.html","$tmp\script.js","$tmp\style.css" "." -Force
+Copy-Item "$tmp\assets\*" ".\assets\" -Recurse -Force
+git add index.html script.js style.css assets    # NOT `git add -A` — see gotchas
+
+# 4. Commit, push, return to source.
+git commit -m "Deploy: <what changed>"
+git push origin gh-pages
+git checkout main
+Remove-Item $tmp -Recurse -Force
 ```
-GitHub Pages refreshes within ~1 minute.
+
+GitHub Pages rebuilds in ~1–2 min (it lags — poll the live URL for the change rather than trusting an immediate reload). Confirm before declaring success.
+
+**Gotchas that the old `git checkout --orphan gh-pages` + `git rm -rf .` recipe got wrong:**
+- `git rm -rf .` deletes `dist/` itself before you can copy from it — hence the step-1 backup to `$env:TEMP` outside the repo.
+- `git rm -rf .` also removes `.gitignore`, so a subsequent `git add -A` happily stages `node_modules/` (and chokes on the embedded git repos under `node_modules/.cache/gh-pages/`). Staging only the four served paths avoids this entirely.
+- `--orphan` is for *creating* a branch; `gh-pages` already exists, so check it out and `reset --hard origin/gh-pages` instead.
 
 ## Architecture
 
