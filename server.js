@@ -134,14 +134,14 @@ function renderIndex(res) {
         const stars = b.user_rating ? '★'.repeat(Math.round(b.user_rating)) + '☆'.repeat(5 - Math.round(b.user_rating)) : '';
         const statusLabel = b.reading_status ? `<span class="status-badge">${b.reading_status.replace('-', ' ')}</span>` : '';
         const highlightClass = b.highlight ? 'highlight-book' : '';
-        const hiddenClass = index >= 6 ? ' hidden-book' : '';
+        const hiddenClass = index >= 20 ? ' hidden-book' : '';
 
         const bookUrl = (b.goodreads_url && b.goodreads_url.startsWith('http'))
             ? b.goodreads_url
             : `https://www.google.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
 
         booksHtml += `
-        <a href="${bookUrl}" target="_blank" class="book-card ${highlightClass}${hiddenClass}">
+        <a href="${bookUrl}" target="_blank" data-rating="${b.user_rating || 0}" class="book-card ${highlightClass}${hiddenClass}">
             <div class="book-image" style="background-image: url('${b.cover_image}');"></div>
             <div class="book-overlay">
                 <div class="book-details">
