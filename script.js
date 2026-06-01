@@ -26,6 +26,49 @@ document.addEventListener("DOMContentLoaded", () => {
         if(counter) counter.innerText = progress + "%";
     }, 50);
 
+    // --- Books preview: 6 top-rated + 14 random (20 visible) ---
+    // The renderers (server.js / build.js) emit books in config order with a
+    // data-rating attribute and hide index >= 20 via .hidden-book. We override
+    // that on the client so each page load previews 20 books: the 6 highest by
+    // user_rating pinned first (tie within the 5-star tier broken randomly),
+    // then 14 random books from the rest. The remaining books stay hidden until
+    // "SHOW ALL BOOKS". Runs during the preloader, before initAnimations(), so
+    // the pre-reorder state is never seen.
+    (() => {
+        const grid = document.querySelector('.books-grid');
+        if (!grid) return;
+        const cards = Array.from(grid.querySelectorAll('.book-card'));
+        const VISIBLE = 20, TOP = 6;
+        if (cards.length <= VISIBLE) return;
+
+        const shuffle = (arr) => {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        };
+        const rating = (c) => parseFloat(c.dataset.rating) || 0;
+
+        // Pre-shuffle, then stable-sort by rating desc: ties (the 5-star tier)
+        // end up in random order, so the top 6 rotate across loads.
+        const pool = shuffle(cards.slice());
+        pool.sort((a, b) => rating(b) - rating(a));
+
+        const topRated = pool.slice(0, TOP);          // 6 highest-rated
+        const fill = shuffle(pool.slice(TOP));         // remaining books, randomized
+        const ordered = [...topRated, ...fill];        // 6 top, then 14 random, then rest
+
+        const fragment = document.createDocumentFragment();
+        ordered.forEach(card => fragment.appendChild(card));
+        grid.appendChild(fragment);
+
+        ordered.forEach((card, index) => {
+            card.classList.remove('hidden-book', 'show-book');
+            if (index >= VISIBLE) card.classList.add('hidden-book');
+        });
+    })();
+
     // --- Book Cover Fallback Handler ---
     // Cover URLs are resolved at build time by scripts/fetch-covers.js and baked
     // into config.json, so primaries almost always load. This is a last-resort
