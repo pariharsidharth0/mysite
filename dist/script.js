@@ -2,7 +2,10 @@
 gsap.registerPlugin(ScrollTrigger);
 
 document.addEventListener("DOMContentLoaded", () => {
-    
+
+    // Respect the OS "reduce motion" accessibility setting
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // --- Preloader Sequence ---
     let progress = 0;
     const counter = document.querySelector('.preloader-counter');
@@ -75,8 +78,64 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- Skills Marquee (built from the rendered skill pills) ---
+    const marquee = document.getElementById('skills-marquee');
+    const pills = document.querySelectorAll('.skill-pill');
+    if (marquee && pills.length) {
+        const names = Array.from(pills).map(p => p.textContent.trim());
+        const track = document.createElement('div');
+        track.className = 'marquee-track';
+        // Duplicate the list so the -50% scroll loops seamlessly
+        [...names, ...names].forEach(n => {
+            const span = document.createElement('span');
+            span.textContent = n;
+            track.appendChild(span);
+        });
+        marquee.appendChild(track);
+    }
+
+    // --- Hide the "DOWNLOAD CV" button when no real URL is configured ---
+    const cvBtn = document.querySelector('.cv-btn');
+    if (cvBtn) {
+        const href = cvBtn.getAttribute('href');
+        if (!href || href === '#') cvBtn.style.display = 'none';
+    }
+
+    // --- Books "Show all" toggle (wired here so it works under reduced motion too) ---
+    const bookToggleBtn = document.getElementById('books-toggle-btn');
+    if (bookToggleBtn) {
+        bookToggleBtn.addEventListener('click', () => {
+            const hiddenBooks = document.querySelectorAll('.hidden-book');
+            const isExpanded = bookToggleBtn.classList.contains('expanded');
+
+            if (isExpanded) {
+                hiddenBooks.forEach(book => book.classList.remove('show-book'));
+                bookToggleBtn.querySelector('.btn-text').innerText = 'SHOW ALL BOOKS';
+                bookToggleBtn.classList.remove('expanded');
+                lenis.scrollTo('.books-section', { offset: -50, duration: 1.2 });
+            } else {
+                hiddenBooks.forEach(book => {
+                    book.classList.add('show-book');
+                    if (!prefersReduced) {
+                        gsap.fromTo(book, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" });
+                    }
+                });
+                bookToggleBtn.querySelector('.btn-text').innerText = 'SHOW LESS';
+                bookToggleBtn.classList.add('expanded');
+            }
+            ScrollTrigger.refresh();
+        });
+    }
+
     // --- Main Animations ---
     function initAnimations() {
+
+        // Reduced motion: reveal everything immediately, skip the scroll choreography
+        if (prefersReduced) {
+            gsap.set(".hero-title .line", { y: "0%" });
+            return;
+        }
+
 
         // PRE-HIDE all animated elements before anything runs
         gsap.set([
@@ -198,35 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 opacity: 1, x: 0,
                 duration: 0.8, stagger: 0.12, ease: "power3.out"
             });
-
-            // Toggle Button Logic
-            const bookToggleBtn = document.getElementById('books-toggle-btn');
-            if (bookToggleBtn) {
-                bookToggleBtn.addEventListener('click', () => {
-                    const hiddenBooks = document.querySelectorAll('.hidden-book');
-                    const isExpanded = bookToggleBtn.classList.contains('expanded');
-                    
-                    if (isExpanded) {
-                        // Collapse
-                        hiddenBooks.forEach(book => {
-                            book.classList.remove('show-book');
-                        });
-                        bookToggleBtn.querySelector('.btn-text').innerText = 'SHOW ALL BOOKS';
-                        bookToggleBtn.classList.remove('expanded');
-                        // Scroll back to section
-                        lenis.scrollTo('.books-section', { offset: -50, duration: 1.2 });
-                    } else {
-                        // Expand
-                        hiddenBooks.forEach(book => {
-                            book.classList.add('show-book');
-                            gsap.fromTo(book, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" });
-                        });
-                        bookToggleBtn.querySelector('.btn-text').innerText = 'SHOW LESS';
-                        bookToggleBtn.classList.add('expanded');
-                    }
-                    ScrollTrigger.refresh();
-                });
-            }
         }
 
         // Steam — Title reveal + staggered card entrance
@@ -363,8 +393,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById('webgl-container');
     if (container && window.THREE) {
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffffff);
-        scene.fog = new THREE.Fog(0xffffff, 10, 50);
+        scene.background = new THREE.Color(0x0a0a0a);
+        scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.z = 30;
@@ -374,8 +404,8 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // Particles
-        const particleCount = 150;
+        // Fewer particles on small screens — the connection check is O(n^2)
+        const particleCount = window.innerWidth < 768 ? 60 : 130;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const velocities = [];
@@ -384,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
             positions[i * 3] = (Math.random() - 0.5) * 60;
             positions[i * 3 + 1] = (Math.random() - 0.5) * 60;
             positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
-            
+
             velocities.push({
                 x: (Math.random() - 0.5) * 0.05,
                 y: (Math.random() - 0.5) * 0.05,
@@ -395,61 +425,64 @@ document.addEventListener("DOMContentLoaded", () => {
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
         const material = new THREE.PointsMaterial({
-            color: 0x000000,
-            size: 0.15,
+            color: 0x39ff14,
+            size: 0.18,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.75
         });
 
         const particles = new THREE.Points(geometry, material);
         scene.add(particles);
 
         const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x000000,
+            color: 0x39ff14,
             transparent: true,
-            opacity: 0.15
+            opacity: 0.12
         });
 
-        let lineGeometry = new THREE.BufferGeometry();
-        let linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+        // Pre-allocate the line buffer once (worst case: every pair connected),
+        // then refill + setDrawRange each frame. No per-frame geometry alloc/dispose.
+        const maxPairs = (particleCount * (particleCount - 1)) / 2;
+        const linePositions = new Float32Array(maxPairs * 6);
+        const lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        const linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
         scene.add(linesMesh);
 
-        function animateBg() {
-            requestAnimationFrame(animateBg);
-            
-            const posAttr = geometry.attributes.position;
-            const currentPositions = posAttr.array;
-            
-            for (let i = 0; i < particleCount; i++) {
-                currentPositions[i * 3] += velocities[i].x;
-                currentPositions[i * 3 + 1] += velocities[i].y;
-                currentPositions[i * 3 + 2] += velocities[i].z;
-                
-                if (Math.abs(currentPositions[i * 3]) > 30) velocities[i].x *= -1;
-                if (Math.abs(currentPositions[i * 3 + 1]) > 30) velocities[i].y *= -1;
-                if (Math.abs(currentPositions[i * 3 + 2]) > 15) velocities[i].z *= -1;
-            }
-            posAttr.needsUpdate = true;
+        const posArray = geometry.attributes.position.array;
+        const lineAttr = lineGeometry.attributes.position;
 
-            const linePositions = [];
+        function renderFrame() {
+            for (let i = 0; i < particleCount; i++) {
+                posArray[i * 3] += velocities[i].x;
+                posArray[i * 3 + 1] += velocities[i].y;
+                posArray[i * 3 + 2] += velocities[i].z;
+
+                if (Math.abs(posArray[i * 3]) > 30) velocities[i].x *= -1;
+                if (Math.abs(posArray[i * 3 + 1]) > 30) velocities[i].y *= -1;
+                if (Math.abs(posArray[i * 3 + 2]) > 15) velocities[i].z *= -1;
+            }
+            geometry.attributes.position.needsUpdate = true;
+
+            let v = 0;
             for (let i = 0; i < particleCount; i++) {
                 for (let j = i + 1; j < particleCount; j++) {
-                    const dx = currentPositions[i * 3] - currentPositions[j * 3];
-                    const dy = currentPositions[i * 3 + 1] - currentPositions[j * 3 + 1];
-                    const dz = currentPositions[i * 3 + 2] - currentPositions[j * 3 + 2];
-                    const distSq = dx*dx + dy*dy + dz*dz;
-                    
-                    if (distSq < 45) {
-                        linePositions.push(
-                            currentPositions[i * 3], currentPositions[i * 3 + 1], currentPositions[i * 3 + 2],
-                            currentPositions[j * 3], currentPositions[j * 3 + 1], currentPositions[j * 3 + 2]
-                        );
+                    const dx = posArray[i * 3] - posArray[j * 3];
+                    const dy = posArray[i * 3 + 1] - posArray[j * 3 + 1];
+                    const dz = posArray[i * 3 + 2] - posArray[j * 3 + 2];
+                    if (dx * dx + dy * dy + dz * dz < 45) {
+                        linePositions[v++] = posArray[i * 3];
+                        linePositions[v++] = posArray[i * 3 + 1];
+                        linePositions[v++] = posArray[i * 3 + 2];
+                        linePositions[v++] = posArray[j * 3];
+                        linePositions[v++] = posArray[j * 3 + 1];
+                        linePositions[v++] = posArray[j * 3 + 2];
                     }
                 }
             }
-            
-            linesMesh.geometry.dispose();
-            linesMesh.geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            lineGeometry.setDrawRange(0, v / 3);
+            lineAttr.updateRange.count = v;
+            lineAttr.needsUpdate = true;
 
             camera.position.x = Math.sin(Date.now() * 0.0002) * 5;
             camera.position.y = Math.cos(Date.now() * 0.0002) * 5;
@@ -457,7 +490,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderer.render(scene, camera);
         }
-        animateBg();
+
+        // Pause the render loop when the tab isn't visible (saves CPU / battery)
+        let rafId = null;
+        function loop() {
+            renderFrame();
+            rafId = requestAnimationFrame(loop);
+        }
+        function start() { if (rafId === null && !prefersReduced) rafId = requestAnimationFrame(loop); }
+        function stop() { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop(); else start();
+        });
+
+        if (prefersReduced) {
+            renderFrame(); // single static frame, no animation loop
+        } else {
+            start();
+        }
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;

@@ -1,8 +1,12 @@
 /* CSS Variables */
 :root {
-    --bg-color: #ffffff;
-    --text-main: #111111;
-    --neon-green: #000000; /* Black accent for light theme */
+    --bg-color: #0a0a0a;          /* Near-black base */
+    --bg-elevated: #141414;       /* Cards / raised surfaces */
+    --text-main: #f0f0f0;         /* Off-white body text */
+    --text-dim: rgba(240, 240, 240, 0.6);
+    --border-soft: rgba(255, 255, 255, 0.12);
+    --neon-green: #39ff14;        /* Neon accent */
+    --neon-glow: 0 0 12px rgba(57, 255, 20, 0.55);
     --font-heading: 'Oswald', sans-serif;
     --font-body: 'Inter', sans-serif;
 }
@@ -33,7 +37,7 @@ body {
 .preloader {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: #ffffff;
+    background: var(--bg-color);
     z-index: 99999;
     display: flex;
     align-items: center;
@@ -44,6 +48,7 @@ body {
     font-size: 5rem;
     font-weight: 700;
     color: var(--neon-green);
+    text-shadow: var(--neon-glow);
 }
 
 /* WebGL Background */
@@ -52,7 +57,7 @@ body {
     top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: -2;
     pointer-events: none;
-    background: #ffffff;
+    background: var(--bg-color);
 }
 
 /* Noise overlay */
@@ -92,6 +97,70 @@ h1, h2, h3, .logo, .parallax-title {
 
 .highlight {
     color: var(--neon-green);
+    text-shadow: var(--neon-glow);
+}
+
+/* Hero status chip */
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 1rem;
+    margin: 0 2vw 1.5rem;
+    border: 1px solid var(--border-soft);
+    border-radius: 50px;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    background: rgba(255, 255, 255, 0.03);
+}
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    box-shadow: var(--neon-glow);
+    animation: statusPulse 2s infinite ease-in-out;
+}
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* Skills marquee */
+.marquee-section {
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 1.5rem 0;
+    margin: 6vh 0;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 3rem;
+    animation: marqueeScroll 28s linear infinite;
+    will-change: transform;
+}
+.marquee-track span {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.marquee-track span::after {
+    content: '/';
+    margin-left: 3rem;
+    color: var(--neon-green);
+}
+@keyframes marqueeScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
 }
 
 .container {
@@ -143,7 +212,7 @@ h1, h2, h3, .logo, .parallax-title {
     justify-content: space-between;
     align-items: center;
     padding: 2rem 4vw;
-    border-top: 1px solid rgba(0,0,0,0.15);
+    border-top: 1px solid var(--border-soft);
 }
 .hero-subtext {
     font-family: var(--font-heading);
@@ -163,13 +232,14 @@ h1, h2, h3, .logo, .parallax-title {
 }
 .cv-btn:hover {
     background: var(--neon-green);
-    color: #ffffff;
+    color: var(--bg-color);
+    box-shadow: var(--neon-glow);
 }
 
 .scroll-indicator {
     width: 1px;
     height: 60px;
-    background: rgba(0,0,0,0.15);
+    background: var(--border-soft);
     position: relative;
     overflow: hidden;
 }
@@ -207,18 +277,27 @@ h1, h2, h3, .logo, .parallax-title {
     letter-spacing: 5px;
     margin-bottom: 2vh;
     opacity: 0.8;
-    color: #000000;
+    color: var(--text-main);
 }
 .exp-row {
     display: grid;
     grid-template-columns: 1fr 200px;
     gap: 2rem;
     padding: 3rem 0;
-    border-top: 1px solid rgba(0,0,0,0.1);
+    border-top: 1px solid var(--border-soft);
+    transition: border-color 0.4s ease, padding-left 0.4s ease;
+}
+.exp-row:hover {
+    border-color: var(--neon-green);
+    padding-left: 1.5rem;
 }
 .exp-title {
     font-size: 2.5rem;
     font-family: var(--font-heading);
+    transition: color 0.3s ease;
+}
+.exp-row:hover .exp-title {
+    color: var(--neon-green);
 }
 .exp-date {
     font-family: var(--font-heading);
@@ -246,7 +325,7 @@ h1, h2, h3, .logo, .parallax-title {
     font-family: var(--font-heading);
     font-size: 1.5rem;
     padding: 1rem 2rem;
-    border: 1px solid rgba(0,0,0,0.15);
+    border: 1px solid var(--border-soft);
     border-radius: 50px;
     transition: all 0.3s ease;
 }
@@ -268,8 +347,8 @@ h1, h2, h3, .logo, .parallax-title {
 .github-card {
     display: block;
     padding: 3rem;
-    background: rgba(0,0,0,0.02);
-    border: 1px solid rgba(0,0,0,0.1);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-soft);
     text-decoration: none;
     color: var(--text-main);
     transition: all 0.3s ease;
@@ -285,9 +364,10 @@ h1, h2, h3, .logo, .parallax-title {
     line-height: 1.5;
 }
 .github-card:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(255,255,255,0.06);
     border-color: var(--neon-green);
     transform: translateY(-5px);
+    box-shadow: var(--neon-glow);
 }
 
 /* Section Divider */
@@ -298,18 +378,19 @@ h1, h2, h3, .logo, .parallax-title {
     padding: 5vh 5vw;
     position: relative;
     z-index: 10;
-    background: #fff;
+    background: var(--bg-color);
 }
 .divider-line {
     flex: 1;
     height: 2px;
-    background: #000;
+    background: var(--neon-green);
+    box-shadow: var(--neon-glow);
 }
 .divider-label {
     font-family: var(--font-heading);
     font-size: 1rem;
     letter-spacing: 8px;
-    color: #000;
+    color: var(--text-main);
     white-space: nowrap;
 }
 
@@ -318,7 +399,7 @@ h1, h2, h3, .logo, .parallax-title {
     padding-top: 2vh;
     padding-bottom: 4vh;
     overflow: hidden;
-    background: #fff;
+    background: var(--bg-color);
     position: relative;
     z-index: 10;
 }
@@ -334,7 +415,7 @@ h1, h2, h3, .logo, .parallax-title {
     padding-top: 2vh;
     padding-bottom: 4vh;
     overflow: hidden;
-    background: #fff;
+    background: var(--bg-color);
     position: relative;
     z-index: 10;
 }
@@ -378,7 +459,7 @@ h1, h2, h3, .logo, .parallax-title {
     aspect-ratio: 2/3.2;
     overflow: hidden;
     background: #000;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid var(--border-soft);
     transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
     text-decoration: none;
     color: inherit;
@@ -472,16 +553,16 @@ h1, h2, h3, .logo, .parallax-title {
 .book-info {
     position: relative;
     padding: 1.5rem;
-    background: #fff;
+    background: var(--bg-elevated);
     z-index: 5;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid var(--border-soft);
 }
 
 .book-info h4 {
     font-family: var(--font-heading);
     font-size: 1.1rem;
     margin-bottom: 0.4rem;
-    color: #000;
+    color: var(--text-main);
     line-height: 1.2;
     overflow: hidden;
     display: -webkit-box;
@@ -492,7 +573,7 @@ h1, h2, h3, .logo, .parallax-title {
 .book-info p {
     font-size: 0.85rem;
     opacity: 0.6;
-    color: #000;
+    color: var(--text-main);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -506,7 +587,8 @@ h1, h2, h3, .logo, .parallax-title {
     position: absolute;
     top: 10px; right: 10px;
     background: var(--neon-green);
-    color: #fff;
+    color: var(--bg-color);
+    box-shadow: var(--neon-glow);
     padding: 0.2rem 0.6rem;
     font-size: 0.6rem;
     font-weight: 700;
@@ -533,7 +615,7 @@ h1, h2, h3, .logo, .parallax-title {
 .center-focus-section {
     height: 100vh;
     position: relative;
-    background: #fff;
+    background: var(--bg-color);
     z-index: 20;
 }
 .center-pin {
@@ -687,13 +769,14 @@ h1, h2, h3, .logo, .parallax-title {
     width: 180px; height: 180px;
     border-radius: 50%;
     background: var(--neon-green);
-    color: #ffffff;
+    color: var(--bg-color);
     text-decoration: none;
     font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 700;
     position: relative;
     overflow: hidden;
+    box-shadow: var(--neon-glow);
 }
 .magnetic-btn .btn-text {
     pointer-events: none;
@@ -725,7 +808,84 @@ h1, h2, h3, .logo, .parallax-title {
     padding: 2rem 4vw;
     font-family: var(--font-heading);
     font-size: 1rem;
-    border-top: 1px solid rgba(0,0,0,0.15);
+    border-top: 1px solid var(--border-soft);
     display: flex;
     justify-content: space-between;
+}
+
+/* ===================================================================
+   Responsive — phones & small tablets
+   =================================================================== */
+@media (max-width: 768px) {
+    .navbar { padding: 1.5rem 6vw; }
+    .nav-links { gap: 1.5rem; }
+    .nav-links a { font-size: 0.8rem; }
+    .logo { font-size: 1.5rem; }
+
+    .hero-title { font-size: clamp(3rem, 14vw, 6rem); padding: 0; }
+    .hero-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+        padding: 1.5rem 6vw;
+    }
+    .scroll-indicator { display: none; }
+
+    .large-text { max-width: 100%; }
+
+    .exp-row { grid-template-columns: 1fr; gap: 0.5rem; }
+    .exp-title { font-size: 1.6rem; }
+    .exp-date { text-align: left; }
+    .exp-row:hover { padding-left: 0.75rem; }
+
+    .skill-pill { font-size: 1.1rem; padding: 0.7rem 1.4rem; }
+    .marquee-track span { font-size: 1.3rem; }
+
+    .github-grid { grid-template-columns: 1fr; }
+    .github-card { padding: 2rem; }
+
+    .center-frame { width: 90vw; height: 60vh; }
+    .slide-content { padding: 2rem 1.5rem; }
+    .slide-content h3 { font-size: 2rem; }
+    .slide-content p.slide-desc { font-size: 1rem; }
+    .slide-content .slide-number { font-size: 1.5rem; }
+
+    .gallery-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+    .gallery-section .section-title { font-size: 2rem; }
+
+    .footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    .status-chip { margin-left: 0; margin-right: 0; }
+}
+
+@media (max-width: 480px) {
+    .books-grid,
+    .steam-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+    .social-links { flex-wrap: wrap; gap: 1.2rem; }
+    .magnetic-btn { width: 150px; height: 150px; font-size: 1.2rem; }
+}
+
+/* ===================================================================
+   Touch devices — restore the native cursor (custom dot never shows)
+   =================================================================== */
+@media (hover: none) {
+    * { cursor: auto !important; }
+    .cursor { display: none; }
+    .exp-row:hover { padding-left: 0; }
+}
+
+/* ===================================================================
+   Reduced motion — respect the OS accessibility preference
+   =================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .scroll-dot,
+    .status-dot,
+    .marquee-track { animation: none !important; }
 }
