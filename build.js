@@ -67,12 +67,15 @@ function build() {
     html = html.replace('{{GITHUB_PROJECTS}}', githubHtml);
 
     let steamHtml = '';
-    config.steam_games.forEach(g => {
+    config.steam_games.forEach((g, i) => {
+        const hours = g.hours ? `<p class="steam-hours">${g.hours}</p>` : '';
         steamHtml += `
         <div class="steam-card">
             <div class="steam-image" style="background-image: url('${g.image}');"></div>
+            <span class="steam-index">${String(i + 1).padStart(2, '0')}</span>
             <div class="steam-info">
                 <h4>${g.title}</h4>
+                ${hours}
             </div>
         </div>
         `;

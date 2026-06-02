@@ -397,62 +397,145 @@ h1, h2, h3, .logo, .parallax-title {
 /* Books Section */
 .books-section {
     padding-top: 2vh;
-    padding-bottom: 4vh;
-    overflow: hidden;
+    /* visible (not hidden): columns parallax vertically and must not be clipped.
+       generous vertical padding absorbs the per-column drift. */
+    padding-bottom: 12vh;
+    overflow: visible;
     background: var(--bg-color);
     position: relative;
     z-index: 10;
 }
+/* Books are laid out as independent vertical columns so each can be driven
+   at a different scroll speed (parallax depth). JS (script.js) distributes the
+   rendered .book-card elements into .book-col wrappers on load. */
 .books-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
+    align-items: flex-start;
     gap: 2rem;
     width: 100%;
+}
+.book-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    perspective: 1200px;   /* gives the per-card rotateX entrance real depth */
+    will-change: transform;
 }
 
-/* Steam Section */
+/* Steam Section — cinematic horizontal shelf.
+   The section pins and .steam-track translates sideways on scroll (script.js).
+   overflow is visible here so the pin-spacer isn't clipped; .steam-pin clips
+   the horizontal track instead. */
 .steam-section {
     padding-top: 2vh;
-    padding-bottom: 4vh;
-    overflow: hidden;
+    padding-bottom: 6vh;
     background: var(--bg-color);
     position: relative;
     z-index: 10;
 }
-.steam-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 2rem;
-    width: 100%;
+.steam-pin {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+.steam-track {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    padding: 0 9vw;
+    will-change: transform;
 }
 .steam-card {
     position: relative;
-    aspect-ratio: 2/3;
+    flex: 0 0 clamp(300px, 32vw, 460px);
+    height: clamp(420px, 72vh, 690px);
     overflow: hidden;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 .steam-image {
     width: 100%;
     height: 100%;
     background-size: cover;
     background-position: center;
-    transition: transform 0.5s ease;
+    transition: transform 0.6s ease;
+}
+.steam-card:hover {
+    border-color: rgba(57, 255, 20, 0.55);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 30px rgba(57, 255, 20, 0.2);
 }
 .steam-card:hover .steam-image {
-    transform: scale(1.05);
+    transform: scale(1.06);
+}
+.steam-index {
+    position: absolute;
+    top: 1.2rem; left: 1.4rem;
+    z-index: 3;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--neon-green);
+    opacity: 0.8;
 }
 .steam-info {
     position: absolute;
     bottom: 0; left: 0; width: 100%;
-    padding: 2rem 1.5rem;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    padding: 2.2rem 1.8rem 1.6rem;
+    z-index: 3;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 5%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0) 100%);
 }
 .steam-info h4 {
     font-family: var(--font-heading);
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 1.7rem;
+    line-height: 1.05;
+    text-transform: uppercase;
     color: #ffffff;
+}
+.steam-hours {
+    color: var(--neon-green);
+    font-family: var(--font-heading);
+    letter-spacing: 0.18em;
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+}
+/* Shelf HUD: progress line + counter + hint */
+.steam-progress {
+    position: absolute;
+    left: 9vw; right: 9vw; bottom: 8vh;
+    height: 2px;
+    background: var(--border-soft);
+}
+.steam-progress i {
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    width: 0;
+    background: var(--neon-green);
+    box-shadow: var(--neon-glow);
+}
+.steam-count {
+    position: absolute;
+    right: 9vw; bottom: calc(8vh + 14px);
+    font-family: var(--font-heading);
+    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+.steam-hint {
+    position: absolute;
+    left: 9vw; bottom: calc(8vh + 14px);
+    font-family: var(--font-heading);
+    letter-spacing: 0.2em;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
 }
 .book-card {
     position: relative;
@@ -476,9 +559,11 @@ h1, h2, h3, .logo, .parallax-title {
     pointer-events: none;
 }
 
+/* Hover is border + glow (NOT transform): the scroll entrance owns the card's
+   inline transform, so a transform-based lift here would be overridden. */
 .book-card:hover {
-    transform: translateY(-15px) scale(1.02);
-    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+    border-color: rgba(57, 255, 20, 0.5);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 24px rgba(57, 255, 20, 0.18);
 }
 
 .book-image {
@@ -876,11 +961,36 @@ h1, h2, h3, .logo, .parallax-title {
 
     .footer { flex-direction: column; gap: 0.5rem; text-align: center; }
     .status-chip { margin-left: 0; margin-right: 0; }
+
+    /* Books: fewer, tighter columns; parallax/skew are disabled in JS on mobile. */
+    .books-grid { gap: 1rem; }
+    .book-col { gap: 1rem; perspective: none; }
+
+    /* Games: no pin on touch — a native horizontal swipe strip with scroll-snap.
+       JS skips the pin under this width; the track must not carry a GSAP x. */
+    .steam-pin {
+        height: auto;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 2vh 0 4vh;
+    }
+    .steam-track {
+        padding: 0 6vw;
+        gap: 1.2rem;
+        transform: none !important;
+    }
+    .steam-card {
+        flex: 0 0 72vw;
+        height: 108vw;
+        scroll-snap-align: center;
+    }
+    .steam-info h4 { font-size: 1.4rem; }
+    .steam-progress, .steam-count, .steam-hint { display: none; }
 }
 
 @media (max-width: 480px) {
-    .books-grid,
-    .steam-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
     .social-links { flex-wrap: wrap; gap: 1.2rem; }
     .magnetic-btn { width: 150px; height: 150px; font-size: 1.2rem; }
 }

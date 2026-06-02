@@ -68,7 +68,13 @@ These two functions contain **duplicated, hand-copied template logic**. Any chan
 
 **Token replacement uses single `String.replace()` calls**, so each `{{PLACEHOLDER}}` may appear exactly once in `index.html`. Loop-rendered sections (experience, skills, books, steam, gallery, work slides) are built as concatenated HTML strings and injected into one placeholder each.
 
-**Books rendering has logic worth knowing** (identical in `server.js` and `build.js`): the first 6 books render visible; index ≥ 6 gets a `hidden-book` class toggled by the "SHOW ALL BOOKS" button in `script.js`. `highlight: true` adds a `highlight-book` class (renders a "TOP RATED" badge). Each card links to the book's `goodreads_url`, or falls back to a Google search URL when that field is empty.
+**Books rendering has logic worth knowing** (identical in `server.js` and `build.js`): the renderers emit **all** books as a flat list of `.book-card` `<a>` elements into the single `{{BOOKS_ITEMS}}` placeholder, in `config.books` order, each tagged with `data-rating`; index ≥ 20 gets a `hidden-book` class. `highlight: true` adds a `highlight-book` class (renders a "TOP RATED" badge). Each card links to the book's `goodreads_url`, or falls back to a Google search URL when that field is empty.
+
+Everything else about the books grid happens **client-side in `script.js`**, against that flat list (see the Frontend section for the scroll animation):
+- A `DOMContentLoaded` IIFE (runs under the preloader, before `initAnimations()`) reorders the cards to preview **6 top-rated + 14 random = 20 visible**, re-applying `hidden-book` to index ≥ 20, then **distributes every card into `.book-col` column wrappers** (4 / 3 / 2 columns by viewport width) so each column can be parallaxed at its own scroll speed. Because distribution is round-robin over the ordered list, hidden books trail the bottom of each column, so "SHOW ALL BOOKS" just reveals them in place.
+- So `.books-grid` is **not** a CSS grid — it's a flexbox row of `.book-col` flex-columns, populated by JS. Before JS runs (or with JS disabled) the cards would be unstyled; this is hidden behind the preloader, matching the existing pattern.
+
+**Games / Steam rendering is a pinned horizontal shelf.** The renderers emit large poster `.steam-card`s (cover + `.steam-index` ordinal + title + `.steam-hours`) into `{{STEAM_GAMES}}`, which `index.html` places inside `.steam-pin > .steam-track`. On desktop `script.js` pins `.steam-pin` and pans `.steam-track` sideways on scroll, with a neon `.steam-progress` bar + `.steam-count`. Card markup (now including the loop index and `hours`) lives in **both** `server.js` and `build.js` — keep them in sync. On touch (`max-width: 768px`) the pin is skipped and `.steam-pin` becomes a native horizontal scroll-snap strip (CSS only).
 
 ### Book cover resolution
 
@@ -101,6 +107,12 @@ These routes exist only in the dev server; the deployed static site has no backe
 ### Frontend
 
 `index.html` loads Lenis (smooth scroll), GSAP + ScrollTrigger, and Three.js from CDNs, then `script.js`. `script.js` runs a preloader counter, then `initAnimations()` wires every scroll-triggered reveal, a custom cursor (`cursor: none` globally + a blend-mode dot), a magnetic contact button, the pinned `.center-focus-section` slide sequence, and a Three.js particle-network background.
+
+**Scroll choreography for books & games (in `initAnimations()`):**
+- **Books** — each visible cover does a scrubbed 3D entrance (`rotateX`+`y`, tied to scroll), the `.book-col` columns drift at different `yPercent` speeds (parallax depth), and the whole `.books-grid` is skewed by Lenis scroll *velocity* and settles when scrolling stops (wide screens only — disabled under 900px). Because GSAP owns each card's inline `transform`, the book hover is a border/glow, **not** a transform-lift (a transform hover would be overridden).
+- **Games** — `.steam-pin` is pinned and `.steam-track` panned horizontally (see Games rendering above).
+
+**Pin-ordering gotcha (important).** There are two pinned ScrollTriggers, and the **work-slides pin is above the games pin on the page but is created *later* in `initAnimations()`**. ScrollTrigger measures pins in *creation* order by default, so without intervention the games pin gets measured before the slides pin has reserved its scroll space — making the games shelf engage far too early and bleed over the books section. The fix is `refreshPriority`: the topmost pin (work slides) gets `refreshPriority: 1`, the games pin `refreshPriority: 0`, so higher-on-page refreshes first. The games pin also uses `anticipatePin: 1`, and `initAnimations()` ends with `ScrollTrigger.refresh()` plus re-refreshes on `window load` and `document.fonts.ready`. **If you add another pinned section, give it a `refreshPriority` consistent with its vertical page order (higher = nearer the top).**
 
 `style.css` is a single stylesheet driven by CSS variables in `:root`. The theme is **dark with a neon-green accent** — `--bg-color` (near-black), `--text-main` (off-white), `--neon-green`, plus `--bg-elevated`, `--border-soft`, and `--neon-glow`. Changing the palette is almost entirely a matter of editing those variables; most components reference them rather than hardcoding colors.
 
