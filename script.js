@@ -38,8 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const grid = document.querySelector('.books-grid');
         if (!grid) return;
         const cards = Array.from(grid.querySelectorAll('.book-card'));
+        if (!cards.length) return;
         const VISIBLE = 20, TOP = 6;
-        if (cards.length <= VISIBLE) return;
 
         const shuffle = (arr) => {
             for (let i = arr.length - 1; i > 0; i--) {
@@ -50,23 +50,39 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         const rating = (c) => parseFloat(c.dataset.rating) || 0;
 
-        // Pre-shuffle, then stable-sort by rating desc: ties (the 5-star tier)
-        // end up in random order, so the top 6 rotate across loads.
-        const pool = shuffle(cards.slice());
-        pool.sort((a, b) => rating(b) - rating(a));
-
-        const topRated = pool.slice(0, TOP);          // 6 highest-rated
-        const fill = shuffle(pool.slice(TOP));         // remaining books, randomized
-        const ordered = [...topRated, ...fill];        // 6 top, then 14 random, then rest
-
-        const fragment = document.createDocumentFragment();
-        ordered.forEach(card => fragment.appendChild(card));
-        grid.appendChild(fragment);
+        let ordered;
+        if (cards.length > VISIBLE) {
+            // Pre-shuffle, then stable-sort by rating desc: ties (the 5-star tier)
+            // end up in random order, so the top 6 rotate across loads.
+            const pool = shuffle(cards.slice());
+            pool.sort((a, b) => rating(b) - rating(a));
+            const topRated = pool.slice(0, TOP);       // 6 highest-rated
+            const fill = shuffle(pool.slice(TOP));      // remaining books, randomized
+            ordered = [...topRated, ...fill];           // 6 top, then 14 random, then rest
+        } else {
+            ordered = cards.slice();
+        }
 
         ordered.forEach((card, index) => {
             card.classList.remove('hidden-book', 'show-book');
             if (index >= VISIBLE) card.classList.add('hidden-book');
         });
+
+        // Distribute into vertical columns for the parallax-depth layout. Each
+        // column is driven at a different scroll speed in initAnimations(). The
+        // round-robin keeps the top-rated picks spread across columns, and hidden
+        // books (index >= VISIBLE) trail the bottom of each column so "Show all"
+        // simply appends them in place. Column count scales down on narrow screens.
+        const COLS = window.innerWidth < 700 ? 2 : (window.innerWidth < 1000 ? 3 : 4);
+        grid.innerHTML = '';
+        const columns = [];
+        for (let i = 0; i < COLS; i++) {
+            const col = document.createElement('div');
+            col.className = 'book-col';
+            grid.appendChild(col);
+            columns.push(col);
+        }
+        ordered.forEach((card, i) => columns[i % COLS].appendChild(card));
     })();
 
     // --- Book Cover Fallback Handler ---
@@ -173,10 +189,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 bookToggleBtn.classList.remove('expanded');
                 lenis.scrollTo('.books-section', { offset: -50, duration: 1.2 });
             } else {
-                hiddenBooks.forEach(book => {
+                hiddenBooks.forEach((book, i) => {
                     book.classList.add('show-book');
                     if (!prefersReduced) {
-                        gsap.fromTo(book, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.8, ease: "power3.out" });
+                        gsap.fromTo(book, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, delay: (i % 8) * 0.04, ease: "power3.out" });
                     }
                 });
                 bookToggleBtn.querySelector('.btn-text').innerText = 'SHOW LESS';
@@ -301,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // Books — Title reveal + staggered card entrance
+        // Books — title reveal + parallax-depth columns + velocity skew
         const booksGrid = document.querySelector('.books-grid');
         if (booksGrid) {
             gsap.set(".books-section .section-title", { opacity: 0, x: -100 });
@@ -309,29 +325,84 @@ document.addEventListener("DOMContentLoaded", () => {
                 scrollTrigger: { trigger: ".books-section", start: "top 80%", once: true },
                 x: 0, opacity: 1, duration: 0.9, ease: "power3.out"
             });
-            // Only animate initially visible books
-            gsap.set(".book-card:not(.hidden-book)", { opacity: 0, x: 80 });
-            gsap.to(".book-card:not(.hidden-book)", {
-                scrollTrigger: { trigger: ".books-section", start: "top 70%", once: true },
-                opacity: 1, x: 0,
-                duration: 0.8, stagger: 0.12, ease: "power3.out"
+
+            // Per-card scrubbed 3D entrance — covers rise + un-tilt as they cross
+            // the viewport (visible cards only; revealed books fade via the
+            // Show-all handler). Scrub ties it to scroll position rather than firing once.
+            gsap.utils.toArray(".book-card:not(.hidden-book)").forEach(card => {
+                gsap.fromTo(card,
+                    { opacity: 0, y: 60, rotateX: -24, transformOrigin: "50% 100%" },
+                    { opacity: 1, y: 0, rotateX: 0, ease: "power2.out",
+                      scrollTrigger: { trigger: card, start: "top 95%", end: "top 62%", scrub: true } });
             });
+
+            // Depth parallax + velocity skew: wide screens only. Touch falls back
+            // to a plain multi-column grid (mobile CSS), matching the no-pin games path.
+            if (window.innerWidth >= 900) {
+                const speeds = [0.12, -0.06, 0.16, -0.10]; // per-column drift; alternating sign = depth
+                gsap.utils.toArray(".book-col").forEach((col, i) => {
+                    const sp = speeds[i % speeds.length];
+                    gsap.fromTo(col, { yPercent: sp * -50 }, {
+                        yPercent: sp * 50, ease: "none",
+                        scrollTrigger: { trigger: ".books-section", start: "top bottom", end: "bottom top", scrub: true }
+                    });
+                });
+                // Whole-grid skew driven by Lenis scroll velocity; settles when you stop.
+                const skewTo = gsap.quickTo(booksGrid, "skewY", { duration: 0.5, ease: "power3" });
+                const scaleTo = gsap.quickTo(booksGrid, "scaleY", { duration: 0.5, ease: "power3" });
+                lenis.on('scroll', ({ velocity }) => {
+                    const v = Math.max(-40, Math.min(40, velocity || 0));
+                    skewTo(v * 0.05);
+                    scaleTo(1 + Math.min(0.035, Math.abs(v) * 0.0008));
+                });
+            }
         }
 
-        // Steam — Title reveal + staggered card entrance
-        const steamGrid = document.querySelector('.steam-grid');
-        if (steamGrid) {
+        // Games — title reveal + cinematic horizontal shelf (pin + sideways pan)
+        const steamTrack = document.querySelector('.steam-track');
+        if (steamTrack) {
             gsap.set(".steam-section .section-title", { opacity: 0, x: 100 });
             gsap.to(".steam-section .section-title", {
                 scrollTrigger: { trigger: ".steam-section", start: "top 80%", once: true },
                 x: 0, opacity: 1, duration: 0.9, ease: "power3.out"
             });
-            gsap.set(".steam-card", { opacity: 0, x: 80 });
-            gsap.to(".steam-card", {
-                scrollTrigger: { trigger: ".steam-section", start: "top 70%", once: true },
-                opacity: 1, x: 0,
-                duration: 0.8, stagger: 0.12, ease: "power3.out"
-            });
+
+            const total = steamTrack.querySelectorAll('.steam-card').length;
+            const count = document.querySelector('.steam-count');
+            const bar = document.querySelector('.steam-progress i');
+            if (count) count.textContent = '01 / ' + String(total).padStart(2, '0');
+
+            // Pin + pan on wider screens, and only when the track actually overflows
+            // (ultrawide may fit everything → no pin). Touch uses the native
+            // scroll-snap strip from the mobile CSS, so the pin is skipped there.
+            const overflow = steamTrack.scrollWidth - window.innerWidth;
+            if (window.innerWidth > 768 && total > 0 && overflow > 0) {
+                const distance = () => Math.max(0, steamTrack.scrollWidth - window.innerWidth);
+                gsap.to(steamTrack, {
+                    x: () => -distance(),
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: ".steam-pin",
+                        start: "top top",
+                        end: () => "+=" + distance(),
+                        pin: true,
+                        scrub: 1,
+                        anticipatePin: 1,
+                        // This pin sits BELOW the work-slides pin on the page, so it
+                        // must refresh AFTER it (lower priority). Without this, it is
+                        // measured before the slides pin reserves its scroll space and
+                        // engages far too early — bleeding over the books section.
+                        refreshPriority: 0,
+                        invalidateOnRefresh: true,
+                        onUpdate: self => {
+                            if (bar) bar.style.width = (self.progress * 100) + "%";
+                            if (count) count.textContent =
+                                String(Math.min(total, Math.round(self.progress * (total - 1)) + 1)).padStart(2, '0')
+                                + ' / ' + String(total).padStart(2, '0');
+                        }
+                    }
+                });
+            }
         }
 
         // Section Dividers — animate ALL (NOW READING + NOW PLAYING)
@@ -405,6 +476,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     end: "+=" + (slides.length * 40) + "%",
                     pin: true,
                     scrub: 1,
+                    // Topmost pin on the page → must refresh FIRST so the games pin
+                    // below it measures against the scroll space this one reserves.
+                    refreshPriority: 1,
                 }
             });
 
@@ -446,6 +520,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         });
+
+        // All triggers now exist — recompute positions in page order (honouring
+        // refreshPriority above), then again once late-loading images/fonts could
+        // have shifted layout. Keeps the two pins measured against the final page.
+        ScrollTrigger.refresh();
+        window.addEventListener('load', () => ScrollTrigger.refresh());
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => ScrollTrigger.refresh());
+        }
     }
 
     // --- WebGL Particle Network Graph ---
