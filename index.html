@@ -7,7 +7,7 @@
     <title>Sidharth Parihar — AI Developer</title>
     <meta name="description" content="Portfolio of Sidharth Parihar, AI Developer at Bitwise — building autonomous agents, RAG pipelines, and voice-enabled systems across Azure and AWS.">
     <meta name="author" content="Sidharth Parihar">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content="#f4efe2">
     <link rel="canonical" href="https://sidharthparihar.github.io/mysite/">
 
     <!-- Open Graph / social sharing -->
@@ -21,79 +21,113 @@
     <meta name="twitter:description" content="AI Developer building autonomous agents, RAG pipelines, and voice-enabled systems across Azure and AWS.">
     <meta name="twitter:image" content="https://sidharthparihar.github.io/mysite/assets/hero_bg_1777289249894.png">
 
-    <!-- Inline SVG favicon (neon "SP" on dark) -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='30' fill='%2339ff14'%3ESP%3C/text%3E%3C/svg%3E">
+    <!-- Inline SVG favicon (hand-drawn "SP" on paper) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4efe2'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Comic Sans MS,cursive' font-weight='700' font-size='30' fill='%2323201b'%3ESP%3C/text%3E%3C/svg%3E">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@500;700&display=swap"
-        rel="stylesheet">
+    <!-- Caveat = signature/marker display · Patrick Hand = casual hand label · Nunito = clean body -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="preloader">
-        <div class="preloader-counter">0%</div>
+    <!-- animated notebook background -->
+    <div class="paper-lines"></div>
+    <div class="margin-line"></div>
+    <div class="holes"><span></span><span></span><span></span><span></span></div>
+    <div class="bg-doodles">
+        <div class="bg-item" data-spd="0.05" style="top:6%;left:7%"><svg class="bob-slow" width="190" height="190" viewBox="0 0 60 60"><path d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg></div>
+        <div class="bg-item" data-spd="0.11" style="top:30%;right:6%"><svg class="spin-slow" width="230" height="230" viewBox="0 0 60 60"><path d="M40 30 Q40 18 28 18 Q14 18 14 32 Q14 48 32 48 Q52 48 52 28 Q52 6 28 6"/></svg></div>
+        <div class="bg-item" data-spd="0.07" style="top:54%;left:4%"><svg class="bob-slow" width="220" height="220" viewBox="0 0 64 64"><path d="M20 14 Q44 4 50 26 Q60 46 36 50 Q12 56 9 34 Q6 16 20 14 Z"/></svg></div>
+        <div class="bg-item" data-spd="0.14" style="top:72%;right:10%"><svg class="spin-rev" width="170" height="170" viewBox="0 0 60 60"><path d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg></div>
+        <div class="bg-item" data-spd="0.06" style="top:86%;left:12%"><svg class="bob-slow" width="200" height="200" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26"/><path d="M20 36 Q30 47 40 36"/><circle cx="22" cy="25" r="2.6" fill="currentColor" stroke="none"/><circle cx="38" cy="25" r="2.6" fill="currentColor" stroke="none"/></svg></div>
+        <div class="bg-item" data-spd="0.10" style="top:16%;left:40%"><svg class="spin-rev" width="150" height="120" viewBox="0 0 70 60"><path d="M6 30 Q16 6 26 30 T46 30 T66 28"/></svg></div>
     </div>
 
-    <div id="webgl-container"></div>
-    <div id="noise-overlay"></div>
+    <!-- pen-nib cursor -->
+    <svg class="nib" viewBox="0 0 26 26"><path d="M3 23 L17 9 L20 12 L6 26 Z M17 9 L21 5 Q23 3 24 5 Q25 6 23 8 L20 12 Z" fill="#23201b"/><circle cx="4.5" cy="24.5" r="1.6" fill="#e4572e"/></svg>
+    <div class="ink-dot"></div>
 
-    <nav class="navbar">
-        <div class="logo">SP / AI</div>
+    <!-- preloader -->
+    <div class="preloader">
+        <svg viewBox="0 0 300 80"><path class="squig draw" d="M5 50 Q30 5 55 50 T105 50 T155 50 T205 50 T255 50 T295 45"/></svg>
+        <div class="preloader-counter preloader-num">0%</div>
+    </div>
+
+    <nav class="nav navbar">
+        <div class="brand logo">Sid.</div>
         <ul class="nav-links">
-            <li><a href="#about">ABOUT</a></li>
-            <li><a href="#work">WORK</a></li>
-            <li><a href="#contact">CONTACT</a></li>
+            <li><a href="#about">about</a></li>
+            <li><a href="#work">work</a></li>
+            <li><a href="#books">books</a></li>
+            <li><a href="#games">games</a></li>
+            <li><a href="#contact">say hi</a></li>
         </ul>
     </nav>
 
-    <div class="cursor"></div>
+    <main>
+        <!-- ===================== HERO ===================== -->
+        <section class="hero wrap" id="hero">
+            <div class="hero-inner">
+                <span class="chip status-chip"><span class="dot status-dot"></span> available for work</span>
+                <h1 class="hero-title">
+                    <span class="reveal">Sidharth Parihar</span>
+                    <svg class="name-underline" viewBox="0 0 560 40" preserveAspectRatio="none">
+                        <path class="draw" d="M6 26 Q140 6 280 22 T554 16"/>
+                    </svg>
+                </h1>
+                <p class="role marker-word">— AI DEVELOPER</p>
+                <p class="sub hero-subtext">B.Tech, IIT Kanpur // Bitwise Inc. // Kota, India</p>
+                <a href="#" target="_blank" class="cv-btn">download CV ✎</a>
 
-    <main id="smooth-wrapper">
-        <div id="smooth-content">
-
-            <section id="hero" class="hero-section">
-                <div class="hero-container">
-                    <div class="status-chip">
-                        <span class="status-dot"></span>
-                        AVAILABLE FOR WORK
-                    </div>
-                    <h1 class="hero-title">
-                        <div class="line-wrap">
-                            <div class="line">Sidharth Parihar</div>
-                        </div>
-                        <div class="line-wrap">
-                            <div class="line highlight">AI DEVELOPER</div>
-                        </div>
-                    </h1>
-                    <div class="hero-bottom">
-                        <p class="hero-subtext">B.Tech, IIT Kanpur // Bitwise Inc. // Kota, India</p>
-                        <a href="#" target="_blank" class="cv-btn">DOWNLOAD CV</a>
-                        <div class="scroll-indicator">
-                            <div class="scroll-dot"></div>
-                        </div>
-                    </div>
+                <!-- sketched annotations -->
+                <div class="anno anno-1">
+                    that's me 👋
+                    <svg class="arrow" viewBox="0 0 120 60" width="120" height="60"><path class="draw" d="M110 8 Q60 10 30 40 M30 40 L40 28 M30 40 L46 44"/></svg>
                 </div>
-            </section>
-
-            <section id="about" class="about-section">
-                <div class="container">
-                    <h2 class="large-text reveal-type">
-                        I am Sidharth Parihar — an AI Developer and engineer currently working at Bitwise Inc. in Kota, India. I hold a B.Tech in Bioengineering from IIT Kanpur, and I have spent the years since building systems at the frontier of artificial intelligence. My work spans autonomous agents, voice-enabled applications, and large-scale cloud deployments across Azure and AWS.
-                    </h2>
+                <div class="anno anno-2">
+                    <svg class="arrow" viewBox="0 0 140 60" width="140" height="60"><path class="draw" d="M10 50 Q70 50 120 18 M120 18 L106 18 M120 18 L120 32"/></svg>
+                    agents, RAG &amp; voice
                 </div>
-            </section>
+                <div class="anno anno-3">↓ scroll, it's<br>worth it</div>
+            </div>
 
+            <!-- hero doodles -->
+            <svg class="doodle marker float" style="top:8%;left:-2%;width:64px;--r:-8deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M20 36 Q30 47 40 36"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+            <svg class="doodle float b hide-sm" style="bottom:24%;left:4%;width:52px;--r:10deg" viewBox="0 0 60 60"><path class="draw" d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg>
+            <svg class="doodle hide-sm" style="top:18%;right:30%;width:46px" viewBox="0 0 60 60"><path class="draw" d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg>
+            <svg class="doodle marker float c hide-sm" style="bottom:12%;left:34%;width:60px;--r:-5deg" viewBox="0 0 70 60"><path class="draw" d="M6 20 Q16 2 26 20 T46 20 T66 18"/></svg>
+            <svg class="doodle float hide-sm" style="top:40%;right:3%;width:70px;--r:6deg" viewBox="0 0 64 64"><path class="draw" d="M20 14 Q44 4 50 26 Q60 46 36 50 Q12 56 9 34 Q6 16 20 14 Z"/></svg>
 
-            <!-- Skills marquee — populated by script.js from the skill pills below -->
-            <div class="marquee-section" id="skills-marquee" aria-hidden="true"></div>
+            <div class="scroll-cue scroll-indicator">scroll
+                <svg viewBox="0 0 24 34"><path d="M12 4 V28 M5 21 L12 30 L19 21"/></svg>
+            </div>
+        </section>
 
-            <section class="experience-section">
-                <div class="container">
-                    <h2 class="section-title">EXPERIENCE</h2>
-                    
+        <!-- ===================== ABOUT ===================== -->
+        <section class="about wrap" id="about">
+            <div class="sec-head">
+                <div class="kicker">// hello there</div>
+                <div class="section-tag">a bit <span class="hl">about me</span></div>
+            </div>
+            <p class="about-text large-text r-up">I am Sidharth Parihar — an AI Developer and engineer currently working at Bitwise Inc. in Kota, India. I hold a B.Tech in Bioengineering from IIT Kanpur, and I have spent the years since building systems at the frontier of artificial intelligence. My work spans autonomous agents, voice-enabled applications, and large-scale cloud deployments across Azure and AWS.</p>
+
+            <svg class="doodle marker float hide-sm" style="top:18%;right:6%;width:64px;--r:8deg" viewBox="0 0 60 60"><path class="draw" d="M30 50 C8 34 11 13 30 22 C49 13 52 34 30 50 Z"/></svg>
+            <svg class="doodle float b hide-sm" style="bottom:14%;left:4%;width:54px;--r:-6deg" viewBox="0 0 70 60"><path class="draw" d="M6 20 Q16 2 26 20 T46 20 T66 18"/></svg>
+        </section>
+
+        <!-- skills marquee — populated by script.js from the skill pills below -->
+        <div class="marquee-section" id="skills-marquee" aria-hidden="true"></div>
+
+        <!-- ===================== EXPERIENCE ===================== -->
+        <section class="experience wrap" id="experience">
+            <div class="sec-head">
+                <div class="kicker">// the path so far</div>
+                <div class="section-tag">where I've <span class="hl">been</span></div>
+            </div>
+            <div class="exp-list">
+                
         <div class="exp-row">
             <div class="exp-title">Trainee Programmer - DART @ Bitwise Inc</div>
             <div class="exp-date">Nov 2024 – Present</div>
@@ -106,121 +140,112 @@
             <div class="exp-desc">Developed a strong analytical foundation for problem-solving in complex systems.</div>
         </div>
         
-                </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="skills-section">
-                <div class="container">
-                    <h2 class="section-title">TECHNICAL STACK</h2>
-                    <div class="skills-cloud">
-                        <span class="skill-pill">Python</span><span class="skill-pill">C++</span><span class="skill-pill">Java</span><span class="skill-pill">AWS Bedrock / Strands</span><span class="skill-pill">Azure AI Foundry</span><span class="skill-pill">Docker</span><span class="skill-pill">RAG / vLLM</span><span class="skill-pill">PostgreSQL</span>
-                    </div>
-                </div>
-            </section>
+        <!-- ===================== TECHNICAL STACK ===================== -->
+        <section class="stack wrap" id="stack">
+            <div class="sec-head">
+                <div class="kicker">// in my toolbox</div>
+                <div class="section-tag">the <span class="hl">stack</span></div>
+            </div>
+            <div class="skills-cloud">
+                <span class="skill-pill">Python</span><span class="skill-pill">C++</span><span class="skill-pill">Java</span><span class="skill-pill">AWS Bedrock / Strands</span><span class="skill-pill">Azure AI Foundry</span><span class="skill-pill">Docker</span><span class="skill-pill">RAG / vLLM</span><span class="skill-pill">PostgreSQL</span>
+            </div>
+        </section>
 
-            <section class="github-section">
-                <div class="container">
-                    <h2 class="section-title">OPEN SOURCE // GITHUB</h2>
-                    <div class="github-grid">
-                        
+        <!-- ===================== GITHUB ===================== -->
+        <section class="github wrap" id="github">
+            <div class="sec-head">
+                <div class="kicker">// open source</div>
+                <div class="section-tag">things I <span class="hl">tinker</span> with</div>
+            </div>
+            <div class="github-grid">
+                
         <a href="https://github.com/pariharsidharth0/xsound" target="_blank" class="github-card">
             <h3>xsound</h3>
             <p>Rust-based audio routing engine and interface.</p>
         </a>
         
-                    </div>
-                </div>
-            </section>
+            </div>
+        </section>
 
+        <!-- ===================== MANIFESTO ===================== -->
+        <section class="manifesto wrap" id="manifesto">
+            <p class="manifesto-quote r-up">&ldquo;I am an AI developer and engineer based in Kota, India. Trained as a bioengineer at IIT Kanpur, I found my calling at the intersection of intelligent systems and software — building machines that think, speak, and act.&rdquo;</p>
+        </section>
 
-            <section class="manifesto-section">
-                <div class="container">
-                    <h2 class="large-text reveal-type"
-                        style="font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.4; opacity: 0.9; max-width: 90%;">
-                        I am an AI developer and engineer based in Kota, India. Trained as a bioengineer at IIT Kanpur, I found my calling at the intersection of intelligent systems and software — building machines that think, speak, and act.
-                    </h2>
-                </div>
-            </section>
-
-            <section id="work" class="center-focus-section">
-                <div class="center-pin">
-                    <div class="center-frame">
-                        
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>AGENTIC SYSTEMS</h3>
-                    <p class="slide-number">01</p>
-                </div>
-                <p class="slide-desc">I design autonomous agents that reason, plan, and execute — systems built to operate independently at scale.</p>
+        <!-- ===================== WORK ===================== -->
+        <section class="work wrap" id="work">
+            <div class="work-head sec-head">
+                <div class="kicker">// what I build</div>
+                <div class="section-tag">selected <span class="hl">work</span></div>
+            </div>
+            <div class="timeline">
+                <svg class="spine" viewBox="0 0 60 1000" preserveAspectRatio="none">
+                    <path class="draw" d="M30 8 Q14 120 30 240 Q46 360 30 480 Q14 600 30 720 Q46 840 30 992"/>
+                </svg>
+                
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">01</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. 01</div>
+                <h3>AGENTIC SYSTEMS</h3>
+                <p>I design autonomous agents that reason, plan, and execute — systems built to operate independently at scale.</p>
             </div>
         </div>
         
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=80');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>RAG PIPELINES</h3>
-                    <p class="slide-number">02</p>
-                </div>
-                <p class="slide-desc">I architect retrieval systems that ground language models in real knowledge — making AI responses precise and trustworthy.</p>
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">02</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. 02</div>
+                <h3>RAG PIPELINES</h3>
+                <p>I architect retrieval systems that ground language models in real knowledge — making AI responses precise and trustworthy.</p>
             </div>
         </div>
         
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1600&q=80');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>VOICE INTEGRATION</h3>
-                    <p class="slide-number">03</p>
-                </div>
-                <p class="slide-desc">I build applications that listen and speak — bringing natural voice interfaces to life using state-of-the-art speech models.</p>
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">03</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. 03</div>
+                <h3>VOICE INTEGRATION</h3>
+                <p>I build applications that listen and speak — bringing natural voice interfaces to life using state-of-the-art speech models.</p>
             </div>
         </div>
         
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>MODEL DISTILLATION</h3>
-                    <p class="slide-number">04</p>
-                </div>
-                <p class="slide-desc">I compress intelligence — taking large, powerful models and refining them into lean, production-ready systems.</p>
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">04</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. 04</div>
+                <h3>MODEL DISTILLATION</h3>
+                <p>I compress intelligence — taking large, powerful models and refining them into lean, production-ready systems.</p>
             </div>
         </div>
         
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1633412802994-5c058f151b66?auto=format&fit=crop&w=1600&q=80');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>CLOUD ARCHITECTURE</h3>
-                    <p class="slide-number">05</p>
-                </div>
-                <p class="slide-desc">I deploy and orchestrate AI workloads across cloud infrastructure — ensuring they are resilient, scalable, and production-grade.</p>
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">05</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. 05</div>
+                <h3>CLOUD ARCHITECTURE</h3>
+                <p>I deploy and orchestrate AI workloads across cloud infrastructure — ensuring they are resilient, scalable, and production-grade.</p>
             </div>
         </div>
         
-                    </div>
-                </div>
-            </section>
-
-            <div class="section-divider" id="divider-reading">
-                <div class="divider-line left"></div>
-                <span class="divider-label">BOOKS</span>
-                <div class="divider-line right"></div>
             </div>
 
-            <section class="books-section">
-                <div class="container">
-                    <h2 class="section-title">BOOKS // FABLE</h2>
-                    <div class="books-grid">
-                        
+            <svg class="doodle marker float hide-sm" style="top:6%;right:4%;width:84px;--r:8deg" viewBox="0 0 64 64"><path class="draw" d="M34 4 L16 34 L28 34 L24 58 L48 24 L33 24 Z"/></svg>
+            <svg class="doodle float b hide-sm" style="top:40%;right:7%;width:70px;--r:-4deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M19 38 Q30 32 41 38"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+            <svg class="doodle hide-sm" style="bottom:8%;right:5%;width:60px;--r:6deg" viewBox="0 0 64 64"><path class="draw" d="M40 30 Q40 18 28 18 Q14 18 14 32 Q14 48 32 48 Q52 48 52 28 Q52 6 28 6"/></svg>
+        </section>
+
+        <!-- ===================== BOOKS ===================== -->
+        <section class="books" id="books">
+            <div class="books-head sec-head" style="text-align:center">
+                <div class="kicker">// off the clock</div>
+                <div class="section-tag">BOOKS // FABLE</div>
+            </div>
+            <div class="books-grid">
+                
         <a href="https://www.google.com/search?q=Empire%20of%20the%20Dawn%20Jay%20Kristoff" target="_blank" data-rating="0" class="book-card ">
             <div class="book-image" style="background-image: url('https://covers.openlibrary.org/b/isbn/9781250245380-L.jpg');"></div>
             <div class="book-overlay">
@@ -1145,76 +1170,63 @@
             </div>
         </a>
         
-                    </div>
-                    <div class="books-toggle-container" style="text-align: center; margin-top: 3rem;">
-                        <button id="books-toggle-btn" class="magnetic-btn" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;">
-                            <div class="btn-text">SHOW ALL BOOKS</div>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <div class="section-divider">
-                <div class="divider-line left"></div>
-                <span class="divider-label">GAMES</span>
-                <div class="divider-line right"></div>
+            </div>
+            <div class="books-toggle-container" style="text-align:center;margin-top:3rem">
+                <button id="books-toggle-btn" class="magnetic-btn">
+                    <div class="btn-text">show all books ✎</div>
+                </button>
             </div>
 
-            <section class="steam-section">
-                <div class="container">
-                    <h2 class="section-title">GAMES // STEAM</h2>
-                </div>
-                <div class="steam-pin">
-                    <div class="steam-track">
-                        
-        <div class="steam-card">
-            <div class="steam-image" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/578080/library_600x900.jpg');"></div>
-            <span class="steam-index">01</span>
-            <div class="steam-info">
-                <h4>PUBG: BATTLEGROUNDS</h4>
-                <p class="steam-hours">1,100 hrs</p>
-            </div>
-        </div>
-        
-        <div class="steam-card">
-            <div class="steam-image" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/730/library_600x900.jpg');"></div>
-            <span class="steam-index">02</span>
-            <div class="steam-info">
-                <h4>Counter-Strike 2</h4>
-                <p class="steam-hours">1,013 hrs</p>
-            </div>
-        </div>
-        
-        <div class="steam-card">
-            <div class="steam-image" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/2507950/library_600x900.jpg');"></div>
-            <span class="steam-index">03</span>
-            <div class="steam-info">
-                <h4>Delta Force</h4>
-                <p class="steam-hours">903 hrs</p>
-            </div>
-        </div>
-        
-        <div class="steam-card">
-            <div class="steam-image" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/1517290/library_600x900.jpg');"></div>
-            <span class="steam-index">04</span>
-            <div class="steam-info">
-                <h4>Battlefield 2042</h4>
-                <p class="steam-hours">890 hrs</p>
-            </div>
-        </div>
-        
-                    </div>
-                    <span class="steam-hint">SCROLL &rarr;</span>
-                    <span class="steam-count"></span>
-                    <div class="steam-progress"><i></i></div>
-                </div>
-            </section>
+            <svg class="doodle marker float hide-sm" style="top:10%;left:5%;width:70px;--r:-10deg" viewBox="0 0 60 60"><path class="draw" d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg>
+            <svg class="doodle float b hide-sm" style="top:30%;right:5%;width:60px;--r:7deg" viewBox="0 0 64 64"><path class="draw" d="M16 40 Q3 40 8 29 Q8 18 21 21 Q25 8 39 15 Q54 13 51 28 Q62 31 52 41 Z"/></svg>
+        </section>
 
-            <section class="gallery-section">
-                <div class="container">
-                    <h2 class="section-title">FEATURED GALLERY</h2>
-                    <div class="gallery-grid">
-                        
+        <!-- ===================== GAMES ===================== -->
+        <section class="games" id="games">
+            <div class="games-head sec-head" style="text-align:center">
+                <div class="kicker">// when the code compiles</div>
+                <div class="section-tag">the <span class="hl">game room</span></div>
+            </div>
+            <div class="corkboard">
+                
+        <div class="polaroid"><span class="pin"></span>
+            <div class="photo" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/578080/library_600x900.jpg');"></div>
+            <div class="label">PUBG: BATTLEGROUNDS</div>
+            <div class="hrs">1,100 hrs</div>
+        </div>
+        
+        <div class="polaroid tape">
+            <div class="photo" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/730/library_600x900.jpg');"></div>
+            <div class="label">Counter-Strike 2</div>
+            <div class="hrs">1,013 hrs</div>
+        </div>
+        
+        <div class="polaroid"><span class="pin"></span>
+            <div class="photo" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/2507950/library_600x900.jpg');"></div>
+            <div class="label">Delta Force</div>
+            <div class="hrs">903 hrs</div>
+        </div>
+        
+        <div class="polaroid tape">
+            <div class="photo" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/1517290/library_600x900.jpg');"></div>
+            <div class="label">Battlefield 2042</div>
+            <div class="hrs">890 hrs</div>
+        </div>
+        
+            </div>
+
+            <svg class="doodle marker float hide-sm" style="top:10%;left:6%;width:80px;--r:-6deg" viewBox="0 0 64 64"><path class="draw" d="M34 4 L16 34 L28 34 L24 58 L48 24 L33 24 Z"/></svg>
+            <svg class="doodle float b hide-sm" style="bottom:12%;right:7%;width:70px;--r:8deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M19 36 Q30 47 41 36"/><path class="draw" d="M16 22 L26 26 M44 22 L34 26"/><circle class="fill" cx="23" cy="29" r="2.6"/><circle class="fill" cx="37" cy="29" r="2.6"/></svg>
+        </section>
+
+        <!-- ===================== GALLERY ===================== -->
+        <section class="gallery wrap" id="gallery">
+            <div class="sec-head" style="text-align:center">
+                <div class="kicker">// snapshots</div>
+                <div class="section-tag">the <span class="hl">scrapbook</span></div>
+            </div>
+            <div class="gallery-grid">
+                
         <div class="gallery-item">
             <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80');"></div>
         </div>
@@ -1227,43 +1239,45 @@
             <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=800&q=80');"></div>
         </div>
         
-                    </div>
-                </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="visual-section full-height">
-                <div class="parallax-container">
-                    <div class="parallax-image" style="background-image: url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=2000&q=80');"></div>
-                </div>
-                <h2 class="parallax-title">PRECISION</h2>
-            </section>
+        <!-- ===================== PARALLAX VISUAL ===================== -->
+        <section class="visual-section full-height">
+            <div class="parallax-container">
+                <div class="parallax-image" style="background-image: url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=2000&q=80');"></div>
+            </div>
+            <h2 class="parallax-title">PRECISION</h2>
+        </section>
 
-            <section id="contact" class="contact-section">
-                <div class="container">
-                    <h2 class="huge-text">LET'S TALK</h2>
-                    <a href="mailto:pariharsidharth0@gmail.com" class="magnetic-btn">
-                        <div class="btn-text">CONNECT</div>
-                    </a>
-                    <div class="social-links">
-                        <a href="https://www.linkedin.com/in/sidharth-parihar-484458163/" target="_blank">LINKEDIN</a>
-                        <a href="https://github.com/pariharsidharth0/" target="_blank">GITHUB</a>
-                        <a href="https://www.instagram.com/iamsid_art/" target="_blank">INSTAGRAM</a>
-                        <a href="https://steamcommunity.com/id/pariharsidharth0/" target="_blank">STEAM</a>
-                    </div>
-                </div>
-            </section>
+        <!-- ===================== CONTACT / FOOTER ===================== -->
+        <section class="foot wrap" id="contact">
+            <div class="foot-big big">let's<br><span class="marker-word">make</span> something.</div>
+            <a href="mailto:pariharsidharth0@gmail.com" class="magnetic-btn contact-btn">
+                <div class="btn-text">say hello ✉</div>
+            </a>
+            <div class="links social-links">
+                <a href="https://www.linkedin.com/in/sidharth-parihar-484458163/" target="_blank">linkedin</a>
+                <a href="https://github.com/pariharsidharth0/" target="_blank">github</a>
+                <a href="https://www.instagram.com/iamsid_art/" target="_blank">instagram</a>
+                <a href="https://steamcommunity.com/id/pariharsidharth0/" target="_blank">steam</a>
+            </div>
+            <div class="note">Sidharth Parihar · MMXXVI · drawn by hand (well, by code)</div>
 
-            <footer class="footer">
-                <p>Sidharth Parihar // MMXXVI // ALL RIGHTS RESERVED.</p>
-            </footer>
-
-        </div>
+            <svg class="doodle marker float hide-sm" style="top:6%;left:10%;width:64px;--r:-8deg" viewBox="0 0 60 60"><path class="draw" d="M30 50 C8 34 11 13 30 22 C49 13 52 34 30 50 Z"/></svg>
+            <svg class="doodle float b hide-sm" style="top:18%;right:12%;width:60px;--r:7deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M20 36 Q30 47 40 36"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+        </section>
     </main>
+
+    <!-- doodle buddy: a kid that roams the page & interacts (see SCENES in script.js) -->
+    <div class="buddy" aria-hidden="true">
+        <div class="buddy-say">hi!</div>
+        <div class="buddy-flip"><div class="buddy-bob"><div class="buddy-fig"></div></div></div>
+    </div>
 
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
 </body>
 
