@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A single-page personal portfolio for Sidharth Parihar. It runs as an Express app for local development/editing, then compiles to a fully static site for free hosting on GitHub Pages. There is no framework and no client-side build step — the frontend is plain HTML/CSS/JS with libraries pulled from CDNs.
 
+**In-progress redesign:** a hand-drawn "sketchbook" look (paper canvas, doodles, a roaming doodle-buddy character with travel/landing animations) is being prototyped in `prototype-sketchbook.html` and has **not** yet been ported into the production files. The buddy's animation & transition system — poses, scenes, the travel/landing state machine, `drive()` hooks, and the browser-verification harness in `.agents/` — is documented in full in **[ANIMATIONS.md](ANIMATIONS.md)**. Read that before touching any buddy animation.
+
 ## Commands
 
 ```bash

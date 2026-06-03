@@ -114,18 +114,17 @@ function renderIndex(res) {
     });
     html = html.replace('{{GITHUB_PROJECTS}}', githubHtml);
 
-    // Replace Steam Games
+    // Replace Steam Games — corkboard polaroids (alternating pin / washi-tape)
     let steamHtml = '';
     config.steam_games.forEach((g, i) => {
-        const hours = g.hours ? `<p class="steam-hours">${g.hours}</p>` : '';
+        const tape = i % 2 ? ' tape' : '';
+        const pin = i % 2 ? '' : '<span class="pin"></span>';
+        const hours = g.hours ? `<div class="hrs">${g.hours}</div>` : '';
         steamHtml += `
-        <div class="steam-card">
-            <div class="steam-image" style="background-image: url('${g.image}');"></div>
-            <span class="steam-index">${String(i + 1).padStart(2, '0')}</span>
-            <div class="steam-info">
-                <h4>${g.title}</h4>
-                ${hours}
-            </div>
+        <div class="polaroid${tape}">${pin}
+            <div class="photo" style="background-image: url('${g.image}');"></div>
+            <div class="label">${g.title}</div>
+            ${hours}
         </div>
         `;
     });
@@ -173,19 +172,16 @@ function renderIndex(res) {
     });
     html = html.replace('{{GALLERY_ITEMS}}', galleryHtml);
 
-    // Replace Work slides
+    // Replace Work — self-drawing marker timeline items
     let workSlidesHtml = '';
     config.work.forEach(w => {
         workSlidesHtml += `
-        <div class="slide">
-            <div class="slide-bg" style="background-image: url('${w.image}');"></div>
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <div class="slide-header">
-                    <h3>${w.title}</h3>
-                    <p class="slide-number">${w.number}</p>
-                </div>
-                <p class="slide-desc">${w.desc}</p>
+        <div class="t-item">
+            <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">${w.number}</text></svg></div>
+            <div class="card">
+                <div class="num-tag">no. ${w.number}</div>
+                <h3>${w.title}</h3>
+                ${w.desc ? `<p>${w.desc}</p>` : ''}
             </div>
         </div>
         `;

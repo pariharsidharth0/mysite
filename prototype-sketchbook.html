@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sketchbook Prototype — Sidharth Parihar</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Caveat = signature/marker display · Patrick Hand = casual hand label · Nunito = clean body -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Patrick+Hand&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   SKETCHBOOK PROTOTYPE — paper canvas, ink doodles
+   Throwaway standalone for sign-off. Not wired to config.json.
+   ============================================================ */
+:root{
+  --paper:#f4efe2;            /* warm cream paper */
+  --paper-2:#efe8d6;          /* slightly deeper paper for cards */
+  --ink:#23201b;             /* near-black ink */
+  --ink-soft:#5b554a;        /* faded pencil */
+  --line:#c9bfa6;            /* ruled-line / soft border */
+  --marker:#e4572e;          /* marker red-coral (primary accent) */
+  --marker-deep:#c8431f;
+  --hl:#ffd23f;              /* highlighter yellow (secondary accent) */
+  --hl-soft:rgba(255,210,63,.55);
+  --shadow:rgba(35,32,27,.18);
+  --font-display:'Caveat',cursive;
+  --font-hand:'Patrick Hand',cursive;
+  --font-body:'Nunito',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html.lenis{height:auto;}
+.lenis.lenis-smooth{scroll-behavior:auto !important;}
+.lenis.lenis-stopped{overflow:hidden;}
+
+body{
+  background-color:var(--paper);
+  /* paper grain + faint ruled grid */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size:120px 120px;
+  color:var(--ink);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  cursor:none;
+}
+@media (hover:none){ body{cursor:auto;} }
+
+a{color:inherit;text-decoration:none;}
+section{position:relative;}
+
+/* ---------- animated notebook background ---------- */
+.paper-lines{position:fixed;left:0;top:-12vh;width:100%;height:124vh;z-index:-3;
+  pointer-events:none;opacity:.7;will-change:transform;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px);
+  background-size:100% 34px;}
+.margin-line{position:fixed;top:0;left:max(46px,5vw);width:2px;height:100%;
+  background:repeating-linear-gradient(var(--marker) 0 8px, transparent 8px 12px);
+  opacity:.35;z-index:-2;pointer-events:none;}
+.holes{position:fixed;left:max(14px,1.6vw);top:0;height:100%;z-index:-2;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:space-around;padding:12vh 0;}
+.holes span{width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 42% 35%, #ece4d2, #c9bb9b);
+  box-shadow:inset 1px 2px 4px rgba(0,0,0,.28);}
+@media(max-width:760px){ .holes{display:none;} .margin-line{left:18px;} }
+
+.bg-doodles{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden;}
+.bg-item{position:absolute;will-change:transform;}
+.bg-item svg{display:block;opacity:.06;overflow:visible;}
+.bg-item svg path,.bg-item svg circle,.bg-item svg line{
+  fill:none;stroke:var(--ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+.spin-slow{animation:spin 50s linear infinite;}
+.spin-rev{animation:spin 64s linear infinite reverse;}
+.bob-slow{animation:bob2 11s ease-in-out infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes bob2{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-22px) rotate(-6deg);}}
+
+/* ---------- pen-nib cursor + ink trail ---------- */
+.nib{
+  position:fixed;top:0;left:0;width:26px;height:26px;
+  pointer-events:none;z-index:10000;transform:translate(-3px,-2px) rotate(-35deg);
+  will-change:transform;
+}
+.ink-dot{
+  position:fixed;top:0;left:0;width:7px;height:7px;border-radius:50%;
+  background:var(--ink);pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);opacity:.5;
+}
+@media (hover:none){ .nib,.ink-dot{display:none;} }
+
+/* ---------- preloader: squiggle drawing to 100% ---------- */
+.preloader{
+  position:fixed;inset:0;background:var(--paper);z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;
+  transition:opacity .6s ease, visibility .6s ease;
+}
+.preloader.done{opacity:0;visibility:hidden;}
+.preloader svg{width:min(60vw,420px);height:auto;overflow:visible;}
+.preloader .squig{
+  fill:none;stroke:var(--marker);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;
+}
+.preloader-num{font-family:var(--font-display);font-size:2.4rem;color:var(--ink-soft);}
+
+/* ---------- shared doodle helpers ---------- */
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);}
+.section-tag{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(2.4rem,6vw,4.5rem);color:var(--ink);line-height:.9;
+  display:inline-block;position:relative;
+}
+.section-tag .hl{position:relative;z-index:1;}
+.section-tag .hl::after{
+  content:"";position:absolute;left:-4px;right:-4px;bottom:.08em;height:.42em;
+  background:var(--hl);z-index:-1;transform:rotate(-1.2deg);border-radius:2px;
+  opacity:.85;
+}
+.kicker{font-family:var(--font-hand);color:var(--marker);letter-spacing:1px;
+  font-size:1rem;text-transform:uppercase;}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 6vw;}
+
+/* ---------- scattered doodle layer ---------- */
+.doodle{position:absolute;pointer-events:none;overflow:visible;z-index:0;opacity:.9;}
+.doodle path,.doodle circle,.doodle line{
+  fill:none;stroke:var(--ink-soft);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;}
+.doodle.marker path,.doodle.marker circle,.doodle.marker line{stroke:var(--marker);}
+.doodle .fill{fill:var(--ink);stroke:none;}
+.doodle.marker .fill{fill:var(--marker);}
+.float{animation:float 6s ease-in-out infinite;}
+.float.b{animation-duration:7.5s;animation-delay:-2s;}
+.float.c{animation-duration:5.5s;animation-delay:-1s;}
+@keyframes float{0%,100%{transform:translateY(0) rotate(var(--r,0deg));}
+  50%{transform:translateY(-12px) rotate(var(--r,0deg));}}
+.section-tag,.kicker,.hero-inner,.card,.book,.polaroid,.foot .links,.foot .big{position:relative;z-index:2;}
+@media(max-width:760px){ .doodle.hide-sm{display:none;} }
+
+/* ---------- doodle buddy (scroll companion) ---------- */
+.buddy{position:fixed;left:16px;bottom:16px;width:118px;z-index:940;pointer-events:none;
+  opacity:0;transition:opacity .5s;will-change:left,top;}
+.buddy.show{opacity:1;}
+.buddy-flip{transition:transform .45s ease;transform-origin:50% 60%;}
+.buddy-bob{animation:buddyBob 2.4s ease-in-out infinite;}
+.buddy-fig{transform-origin:50% 100%;}
+.buddy-fig.pop{animation:pop .45s cubic-bezier(.34,1.4,.64,1);}
+.buddy-fig.land{animation:land .55s cubic-bezier(.2,.85,.3,1);}
+@keyframes pop{0%{transform:scale(.88)}55%{transform:scale(1.06)}100%{transform:scale(1)}}
+/* landing drop + squash — the visible bridge from parachute/climb into the settled pose */
+@keyframes land{0%{transform:translateY(-26px) scaleY(1.14) scaleX(.88)}
+  40%{transform:translateY(0) scaleY(.72) scaleX(1.18)}
+  62%{transform:translateY(-5px) scaleY(1.07) scaleX(.96)}
+  100%{transform:translateY(0) scale(1)}}
+.buddy svg{width:100%;height:auto;overflow:visible;display:block;
+  /* faint paper halo so the kid stays legible over any busy cover/background */
+  filter:drop-shadow(0 0 2px var(--paper)) drop-shadow(0 0 1px var(--paper));}
+.buddy svg path,.buddy svg circle{fill:none;stroke:var(--buddy-ink,var(--ink));stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;}
+.buddy svg .fc{fill:var(--buddy-ink,var(--ink));stroke:none;}
+.buddy svg .fc2{stroke:var(--ink-soft);stroke-width:1.6;}
+.buddy svg .spark,.buddy svg .page,.buddy svg .ctrl{stroke:var(--marker);}
+.buddy-say{position:absolute;bottom:100%;left:46%;margin-bottom:8px;white-space:nowrap;
+  font-family:var(--font-hand);font-size:.92rem;color:var(--ink);background:var(--paper-2);
+  border:2px solid var(--ink);padding:.25rem .65rem;border-radius:12px 12px 12px 2px;
+  box-shadow:2px 3px 0 var(--shadow);}
+.buddy-say::after{content:"";position:absolute;left:16px;top:100%;
+  border:6px solid transparent;border-top-color:var(--ink);}
+.scribble{transform-box:fill-box;transform-origin:0% 0%;animation:scribble .5s ease-in-out infinite;}
+.type{transform-box:fill-box;transform-origin:50% 0%;animation:typing .55s ease-in-out infinite;}
+.nod{transform-box:fill-box;transform-origin:50% 100%;animation:nod 2.2s ease-in-out infinite;}
+.mash{transform-box:fill-box;transform-origin:50% 0%;animation:mash .26s ease-in-out infinite;}
+.wave{transform-box:fill-box;transform-origin:0% 100%;animation:wave .55s ease-in-out infinite;}
+.tap{transform-box:fill-box;transform-origin:50% 0%;animation:tap .4s ease-in-out infinite;}
+.page{transform-box:fill-box;transform-origin:0% 50%;animation:flip 2.6s ease-in-out infinite;}
+@keyframes buddyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes scribble{0%,100%{transform:rotate(-11deg)}50%{transform:rotate(11deg)}}
+@keyframes typing{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@keyframes nod{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes mash{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes wave{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-24deg)}}
+@keyframes tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes flip{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.35)}}
+/* idle standing legs — gentle weight shift so he's never frozen */
+.legL,.legR{transform-box:fill-box;transform-origin:50% 0%;}
+.legL{animation:idleLeg 2.6s ease-in-out infinite;}
+.legR{animation:idleLeg 2.6s ease-in-out infinite reverse;}
+@keyframes idleLeg{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+/* sitting lower body — soft settle */
+.sitLower{transform-box:fill-box;transform-origin:50% 0%;animation:settle 3s ease-in-out infinite;}
+@keyframes settle{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(1px) rotate(1.5deg)}}
+/* locomotion */
+.rope{stroke:var(--ink-soft);stroke-width:2;stroke-dasharray:3 4;}
+.legA,.legB,.armA,.armB{transform-box:fill-box;transform-origin:50% 0%;}
+.legA{animation:stride .46s ease-in-out infinite;}
+.legB{animation:stride .46s ease-in-out infinite reverse;}
+.armA{animation:swing .46s ease-in-out infinite reverse;}
+.armB{animation:swing .46s ease-in-out infinite;}
+@keyframes stride{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(20deg)}}
+@keyframes swing{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}}
+.reachA,.reachB{transform-box:fill-box;transform-origin:0% 100%;}
+.reachA{animation:reach .6s ease-in-out infinite;}
+.reachB{animation:reach .6s ease-in-out infinite reverse;}
+@keyframes reach{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(8deg)}}
+.sway{transform-box:fill-box;transform-origin:50% 8%;animation:sway 2.4s ease-in-out infinite;}
+@keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@media(max-width:760px){ .buddy{width:86px;left:8px;bottom:8px;} .buddy-say{font-size:.76rem;} }
+@media (prefers-reduced-motion:reduce){
+  .buddy-fig,.scribble,.type,.nod,.mash,.wave,.tap,.page,.legL,.legR,.sitLower,
+  .legA,.legB,.armA,.armB,.reachA,.reachB,.sway{animation:none !important;} }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{position:fixed;top:0;left:0;width:100%;z-index:900;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 6vw;mix-blend-mode:multiply;}
+.nav .brand{font-family:var(--font-display);font-weight:700;font-size:1.8rem;}
+.nav ul{display:flex;gap:1.6rem;list-style:none;font-family:var(--font-hand);font-size:1.05rem;}
+.nav a{position:relative;}
+.nav a::after{content:"";position:absolute;left:0;bottom:-3px;width:100%;height:2px;
+  background:var(--marker);transform:scaleX(0);transform-origin:left;transition:transform .3s;}
+.nav a:hover::after{transform:scaleX(1);}
+
+/* ============================================================
+   HERO — scribbled intro page
+   ============================================================ */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:5rem;}
+.hero-inner{position:relative;width:100%;}
+.hero .chip{
+  display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-hand);
+  font-size:.95rem;color:var(--ink-soft);border:2px solid var(--ink);
+  padding:.3rem .9rem;border-radius:30px 26px 30px 24px/26px 30px 24px 30px;
+  transform:rotate(-2deg);background:var(--paper);
+}
+.hero .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--marker);
+  animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.hero h1{font-family:var(--font-display);font-weight:700;line-height:.86;
+  font-size:clamp(3.5rem,13vw,11rem);margin:.4rem 0 .2rem;letter-spacing:-.01em;}
+.hero h1 .reveal{display:inline-block;clip-path:inset(0 100% 0 0);}
+.hero h1 .marker-word{color:var(--marker);}
+
+.hero .role{font-family:var(--font-hand);font-size:clamp(1.4rem,3.2vw,2.4rem);
+  color:var(--ink);margin-top:.2rem;}
+
+/* hand-drawn underline under the name */
+.name-underline{position:absolute;left:0;bottom:-1.4rem;width:min(70%,560px);height:40px;overflow:visible;}
+.name-underline path{fill:none;stroke:var(--marker);stroke-width:5;stroke-linecap:round;}
+
+/* sketched-in annotations around the hero */
+.anno{position:absolute;font-family:var(--font-hand);color:var(--ink-soft);
+  font-size:1.05rem;opacity:0;}
+.anno .arrow{overflow:visible;}
+.anno .arrow path{fill:none;stroke:var(--ink-soft);stroke-width:2.5;stroke-linecap:round;}
+.anno-1{top:14%;right:8%;width:200px;text-align:center;transform:rotate(4deg);}
+.anno-2{bottom:20%;right:14%;width:230px;transform:rotate(-3deg);}
+.anno-3{top:34%;left:2%;width:150px;transform:rotate(-6deg);}
+
+.hero .sub{font-family:var(--font-body);font-weight:600;color:var(--ink-soft);
+  font-size:1.1rem;margin-top:2.6rem;max-width:36ch;}
+
+.scroll-cue{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  font-family:var(--font-hand);color:var(--ink-soft);text-align:center;font-size:.9rem;}
+.scroll-cue svg{display:block;margin:.3rem auto 0;width:24px;height:34px;}
+.scroll-cue path{stroke:var(--ink-soft);stroke-width:2.5;fill:none;stroke-linecap:round;
+  animation:bob 1.8s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+/* ============================================================
+   WORK — self-drawing marker timeline
+   ============================================================ */
+.work{padding:14vh 0 16vh;}
+.work-head{margin-bottom:5rem;}
+.timeline{position:relative;}
+/* the drawn spine */
+.spine{position:absolute;left:36px;top:0;height:100%;width:60px;overflow:visible;pointer-events:none;}
+.spine path{fill:none;stroke:var(--marker);stroke-width:4;stroke-linecap:round;}
+@media(max-width:760px){ .spine{left:14px;} }
+
+.t-item{position:relative;padding-left:120px;margin-bottom:5.5rem;}
+@media(max-width:760px){ .t-item{padding-left:64px;} }
+.t-node{position:absolute;left:24px;top:6px;width:42px;height:42px;}
+@media(max-width:760px){ .t-node{left:2px;width:34px;height:34px;} }
+.t-node svg{width:100%;height:100%;overflow:visible;}
+.t-node circle{fill:var(--paper);stroke:var(--marker);stroke-width:4;}
+.t-node .num{font-family:var(--font-display);font-weight:700;fill:var(--ink);font-size:20px;}
+
+.card{
+  background:var(--paper-2);border:2.5px solid var(--ink);
+  padding:1.6rem 1.8rem;position:relative;max-width:560px;
+  border-radius:14px 10px 16px 8px/10px 16px 8px 16px;
+  box-shadow:6px 7px 0 var(--shadow);
+}
+.card::before{ /* washi tape */
+  content:"";position:absolute;top:-14px;left:30px;width:90px;height:28px;
+  background:var(--hl-soft);transform:rotate(-4deg);
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.card h3{font-family:var(--font-display);font-weight:700;font-size:2rem;line-height:1;margin-bottom:.4rem;}
+.card .num-tag{font-family:var(--font-hand);color:var(--marker);font-size:1rem;}
+.card p{font-family:var(--font-body);color:var(--ink-soft);font-weight:600;margin-top:.5rem;line-height:1.5;}
+.t-item:nth-child(even) .card{transform:rotate(.6deg);}
+.t-item:nth-child(odd) .card{transform:rotate(-.5deg);}
+
+/* arrow connector doodle between cards */
+.connector{position:absolute;left:54px;width:80px;height:90px;overflow:visible;pointer-events:none;}
+.connector path{fill:none;stroke:var(--ink-soft);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:5 7;}
+
+/* ============================================================
+   BOOKS — parallax columns + velocity skew (re-skinned)
+   ============================================================ */
+.books{padding:12vh 0 14vh;overflow:hidden;}
+.books-head{text-align:center;margin-bottom:4rem;}
+.books-grid{display:flex;gap:1.6rem;justify-content:center;align-items:flex-start;
+  will-change:transform;}
+.book-col{display:flex;flex-direction:column;gap:1.6rem;flex:1;max-width:230px;will-change:transform;}
+.book{
+  position:relative;background:var(--paper-2);padding:10px 10px 14px;
+  border:2px solid var(--ink);border-radius:6px;
+  box-shadow:4px 5px 0 var(--shadow);will-change:transform;
+}
+.book:nth-child(3n){transform:rotate(-1.5deg);}
+.book:nth-child(3n+1){transform:rotate(1.2deg);}
+.book .cover{aspect-ratio:2/3;background-size:cover;background-position:center;
+  border:1.5px solid var(--ink);border-radius:3px;background-color:#ddd;
+  filter:saturate(.92) contrast(1.02);}
+.book .t{font-family:var(--font-hand);font-size:.95rem;line-height:1.1;margin-top:.55rem;}
+.book .a{font-family:var(--font-body);font-weight:600;font-size:.78rem;color:var(--ink-soft);}
+.book .stars{font-family:var(--font-body);color:var(--marker);font-size:.85rem;letter-spacing:1px;}
+.book.top::after{ /* TOP READ paper tab */
+  content:"TOP READ";position:absolute;top:-10px;right:-8px;
+  font-family:var(--font-hand);font-size:.62rem;letter-spacing:1px;
+  background:var(--hl);color:var(--ink);padding:3px 7px;transform:rotate(6deg);
+  border:1.5px solid var(--ink);border-radius:3px;}
+.book:hover{box-shadow:6px 8px 0 var(--marker);}
+
+/* ============================================================
+   GAMES — scrapbook corkboard
+   ============================================================ */
+.games{padding:13vh 0 16vh;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(180,140,80,.10), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(150,110,60,.05) 0 8px, transparent 8px 16px);
+}
+.games-head{text-align:center;margin-bottom:5rem;}
+.corkboard{display:flex;flex-wrap:wrap;gap:2.4rem 3rem;justify-content:center;align-items:flex-start;}
+.polaroid{
+  position:relative;background:#fbf8f0;padding:12px 12px 50px;width:230px;
+  box-shadow:5px 8px 16px rgba(0,0,0,.22);will-change:transform;
+}
+.polaroid .photo{aspect-ratio:3/4;background-size:cover;background-position:center;
+  background-color:#bbb;}
+.polaroid .label{font-family:var(--font-display);font-weight:700;font-size:1.5rem;
+  text-align:center;margin-top:.45rem;line-height:1;}
+.polaroid .hrs{font-family:var(--font-hand);color:var(--marker);text-align:center;
+  font-size:1rem;transform:rotate(-2deg);}
+.polaroid:nth-child(1){transform:rotate(-4deg);}
+.polaroid:nth-child(2){transform:rotate(3deg);margin-top:2.5rem;}
+.polaroid:nth-child(3){transform:rotate(-2deg);}
+.polaroid:nth-child(4){transform:rotate(4deg);margin-top:2rem;}
+/* pushpin */
+.pin{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:22px;height:22px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%, #ff7a5c, var(--marker-deep));
+  box-shadow:1px 3px 5px rgba(0,0,0,.35);z-index:3;}
+.pin::after{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  width:3px;height:10px;background:rgba(0,0,0,.3);border-radius:2px;}
+/* washi tape variant on some */
+.polaroid.tape::before{content:"";position:absolute;top:-10px;left:24px;width:70px;height:26px;
+  background:var(--hl-soft);transform:rotate(-8deg);}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.foot{padding:8vh 0 4vh;text-align:center;}
+.foot .big{font-family:var(--font-display);font-weight:700;font-size:clamp(3rem,9vw,7rem);line-height:.9;}
+.foot .links{margin-top:1.4rem;display:flex;gap:1.4rem;justify-content:center;
+  font-family:var(--font-hand);font-size:1.1rem;}
+.foot .links a{position:relative;}
+.foot .links a:hover{color:var(--marker);}
+.foot .note{font-family:var(--font-body);font-weight:600;color:var(--ink-soft);margin-top:2.5rem;font-size:.85rem;}
+
+/* reduced motion */
+@media (prefers-reduced-motion:reduce){
+  .draw{stroke-dashoffset:0 !important;}
+  .anno{opacity:1 !important;}
+  .hero h1 .reveal{clip-path:none !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- animated notebook background -->
+<div class="paper-lines"></div>
+<div class="margin-line"></div>
+<div class="holes"><span></span><span></span><span></span><span></span></div>
+<div class="bg-doodles">
+  <div class="bg-item" data-spd="0.05" style="top:6%;left:7%"><svg class="bob-slow" width="190" height="190" viewBox="0 0 60 60"><path d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg></div>
+  <div class="bg-item" data-spd="0.11" style="top:30%;right:6%"><svg class="spin-slow" width="230" height="230" viewBox="0 0 60 60"><path d="M40 30 Q40 18 28 18 Q14 18 14 32 Q14 48 32 48 Q52 48 52 28 Q52 6 28 6"/></svg></div>
+  <div class="bg-item" data-spd="0.07" style="top:54%;left:4%"><svg class="bob-slow" width="220" height="220" viewBox="0 0 64 64"><path d="M20 14 Q44 4 50 26 Q60 46 36 50 Q12 56 9 34 Q6 16 20 14 Z"/></svg></div>
+  <div class="bg-item" data-spd="0.14" style="top:72%;right:10%"><svg class="spin-rev" width="170" height="170" viewBox="0 0 60 60"><path d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg></div>
+  <div class="bg-item" data-spd="0.06" style="top:86%;left:12%"><svg class="bob-slow" width="200" height="200" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26"/><path d="M20 36 Q30 47 40 36"/><circle cx="22" cy="25" r="2.6" fill="currentColor" stroke="none"/><circle cx="38" cy="25" r="2.6" fill="currentColor" stroke="none"/></svg></div>
+  <div class="bg-item" data-spd="0.10" style="top:16%;left:40%"><svg class="spin-rev" width="150" height="120" viewBox="0 0 70 60"><path d="M6 30 Q16 6 26 30 T46 30 T66 28"/></svg></div>
+</div>
+
+<!-- pen-nib cursor -->
+<svg class="nib" viewBox="0 0 26 26"><path d="M3 23 L17 9 L20 12 L6 26 Z M17 9 L21 5 Q23 3 24 5 Q25 6 23 8 L20 12 Z" fill="#23201b"/><circle cx="4.5" cy="24.5" r="1.6" fill="#e4572e"/></svg>
+<div class="ink-dot"></div>
+
+<!-- preloader -->
+<div class="preloader">
+  <svg viewBox="0 0 300 80"><path class="squig draw" d="M5 50 Q30 5 55 50 T105 50 T155 50 T205 50 T255 50 T295 45"/></svg>
+  <div class="preloader-num">0%</div>
+</div>
+
+<nav class="nav">
+  <div class="brand">Sid.</div>
+  <ul>
+    <li><a href="#work">work</a></li>
+    <li><a href="#books">books</a></li>
+    <li><a href="#games">games</a></li>
+    <li><a href="#contact">say hi</a></li>
+  </ul>
+</nav>
+
+<main>
+  <!-- ===================== HERO ===================== -->
+  <section class="hero wrap" id="top">
+    <div class="hero-inner">
+      <span class="chip"><span class="dot"></span> available for work</span>
+      <h1>
+        <span class="reveal">Sidharth</span><br>
+        <span class="reveal marker-word">Parihar</span>
+        <svg class="name-underline" viewBox="0 0 560 40" preserveAspectRatio="none">
+          <path class="draw" d="M6 26 Q140 6 280 22 T554 16"/>
+        </svg>
+      </h1>
+      <p class="role">— AI developer who builds things that think.</p>
+      <p class="sub">B.Tech, IIT Kanpur · Bitwise Inc. · scribbling code &amp; reading too much fantasy in Kota, India.</p>
+
+      <!-- sketched annotations -->
+      <div class="anno anno-1">
+        that's me 👋
+        <svg class="arrow" viewBox="0 0 120 60" width="120" height="60"><path class="draw" d="M110 8 Q60 10 30 40 M30 40 L40 28 M30 40 L46 44"/></svg>
+      </div>
+      <div class="anno anno-2">
+        <svg class="arrow" viewBox="0 0 140 60" width="140" height="60"><path class="draw" d="M10 50 Q70 50 120 18 M120 18 L106 18 M120 18 L120 32"/></svg>
+        agents, RAG &amp; voice
+      </div>
+      <div class="anno anno-3">
+        ↓ scroll, it's<br>worth it
+      </div>
+    </div>
+
+    <!-- hero doodles -->
+    <svg class="doodle marker float" style="top:8%;left:-2%;width:64px;--r:-8deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M20 36 Q30 47 40 36"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+    <svg class="doodle float b hide-sm" style="bottom:24%;left:4%;width:52px;--r:10deg" viewBox="0 0 60 60"><path class="draw" d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg>
+    <svg class="doodle hide-sm" style="top:18%;right:30%;width:46px" viewBox="0 0 60 60"><path class="draw" d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg>
+    <svg class="doodle marker float c hide-sm" style="bottom:12%;left:34%;width:60px;--r:-5deg" viewBox="0 0 70 60"><path class="draw" d="M6 20 Q16 2 26 20 T46 20 T66 18"/></svg>
+    <svg class="doodle float hide-sm" style="top:40%;right:3%;width:70px;--r:6deg" viewBox="0 0 64 64"><path class="draw" d="M20 14 Q44 4 50 26 Q60 46 36 50 Q12 56 9 34 Q6 16 20 14 Z"/></svg>
+    <svg class="doodle hide-sm" style="bottom:30%;right:6%;width:56px;--r:8deg" viewBox="0 0 60 60"><path class="draw" d="M14 24 H42 V40 Q42 50 28 50 Q14 50 14 40 Z M42 28 Q52 28 52 35 Q52 42 42 40 M20 12 Q24 17 20 20 M30 12 Q34 17 30 20"/></svg>
+    <svg class="doodle marker float b hide-sm" style="top:6%;left:22%;width:30px;--r:-12deg" viewBox="0 0 60 60"><path class="draw" d="M30 6 L36 22 L53 24 L40 35 L44 52 L30 43 L16 52 L20 35 L7 24 L24 22 Z"/></svg>
+    <svg class="doodle float c hide-sm" style="bottom:6%;right:32%;width:34px;--r:6deg" viewBox="0 0 60 60"><path class="draw" d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg>
+
+    <div class="scroll-cue">scroll
+      <svg viewBox="0 0 24 34"><path d="M12 4 V28 M5 21 L12 30 L19 21"/></svg>
+    </div>
+  </section>
+
+  <!-- ===================== WORK ===================== -->
+  <section class="work wrap" id="work">
+    <div class="work-head">
+      <div class="kicker">// what I build</div>
+      <div class="section-tag">selected <span class="hl">work</span></div>
+    </div>
+
+    <div class="timeline">
+      <svg class="spine" viewBox="0 0 60 1000" preserveAspectRatio="none">
+        <path class="draw" d="M30 8 Q14 120 30 240 Q46 360 30 480 Q14 600 30 720 Q46 840 30 992"/>
+      </svg>
+
+      <div class="t-item">
+        <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">01</text></svg></div>
+        <div class="card"><div class="num-tag">no. 01</div><h3>Agentic Systems</h3>
+          <p>Autonomous agents that reason, plan, and execute — built to operate independently at scale.</p></div>
+        <svg class="connector" style="bottom:-78px" viewBox="0 0 80 90"><path class="draw" d="M40 4 Q10 40 40 84 M40 84 L30 72 M40 84 L52 74"/></svg>
+      </div>
+
+      <div class="t-item">
+        <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">02</text></svg></div>
+        <div class="card"><div class="num-tag">no. 02</div><h3>RAG Pipelines</h3>
+          <p>Retrieval systems that ground language models in real knowledge — precise, trustworthy answers.</p></div>
+      </div>
+
+      <div class="t-item">
+        <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">03</text></svg></div>
+        <div class="card"><div class="num-tag">no. 03</div><h3>Voice Integration</h3>
+          <p>Apps that listen and speak — natural voice interfaces using state-of-the-art speech models.</p></div>
+      </div>
+
+      <div class="t-item">
+        <div class="t-node"><svg viewBox="0 0 42 42"><circle class="draw" cx="21" cy="21" r="18"/><text class="num" x="21" y="29" text-anchor="middle">04</text></svg></div>
+        <div class="card"><div class="num-tag">no. 04</div><h3>Cloud Architecture</h3>
+          <p>Orchestrating AI workloads across Azure &amp; AWS — resilient, scalable, production-grade.</p></div>
+      </div>
+    </div>
+
+    <!-- work doodles (right gutter) -->
+    <svg class="doodle marker float hide-sm" style="top:6%;right:4%;width:84px;--r:8deg" viewBox="0 0 64 64"><path class="draw" d="M34 4 L16 34 L28 34 L24 58 L48 24 L33 24 Z"/></svg>
+    <svg class="doodle float b hide-sm" style="top:32%;right:8%;width:90px;--r:-4deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M19 38 Q30 32 41 38"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/><path class="draw" d="M14 16 Q22 10 18 6 M46 16 Q38 10 42 6"/></svg>
+    <svg class="doodle hide-sm" style="top:58%;right:5%;width:70px;--r:6deg" viewBox="0 0 64 64"><path class="draw" d="M40 30 Q40 18 28 18 Q14 18 14 32 Q14 48 32 48 Q52 48 52 28 Q52 6 28 6"/></svg>
+    <svg class="doodle marker float c hide-sm" style="bottom:4%;right:12%;width:72px;--r:-7deg" viewBox="0 0 60 60"><path class="draw" d="M30 50 C8 34 11 13 30 22 C49 13 52 34 30 50 Z"/></svg>
+    <svg class="doodle hide-sm" style="top:20%;right:24%;width:50px;--r:5deg" viewBox="0 0 60 60"><path class="draw" d="M8 12 H52 V40 H26 L16 52 V40 H8 Z M22 20 L38 20 M22 30 L34 30"/></svg>
+    <svg class="doodle marker float hide-sm" style="top:46%;right:18%;width:44px;--r:-8deg" viewBox="0 0 60 60"><path class="draw" d="M30 6 L36 22 L53 24 L40 35 L44 52 L30 43 L16 52 L20 35 L7 24 L24 22 Z"/></svg>
+    <svg class="doodle float b hide-sm" style="bottom:22%;right:3%;width:58px;--r:7deg" viewBox="0 0 60 60"><path class="draw" d="M22 10 V44 M22 18 L42 12 V40 M14 44 A8 6 0 1 0 22 44 M34 40 A8 6 0 1 0 42 40"/></svg>
+
+  <!-- ===================== BOOKS ===================== -->
+  <section class="books" id="books">
+    <div class="books-head">
+      <div class="kicker">// off the clock</div>
+      <div class="section-tag">the <span class="hl">bookshelf</span></div>
+    </div>
+    <div class="books-grid" id="booksGrid"><!-- columns injected by JS --></div>
+
+    <!-- books doodles -->
+    <svg class="doodle marker float hide-sm" style="top:14%;left:5%;width:70px;--r:-10deg" viewBox="0 0 60 60"><path class="draw" d="M30 4 L37 22 L56 22 L41 34 L47 53 L30 41 L13 53 L19 34 L4 22 L23 22 Z"/></svg>
+    <svg class="doodle float b hide-sm" style="top:30%;right:5%;width:60px;--r:7deg" viewBox="0 0 64 64"><path class="draw" d="M16 40 Q3 40 8 29 Q8 18 21 21 Q25 8 39 15 Q54 13 51 28 Q62 31 52 41 Z"/></svg>
+    <svg class="doodle marker hide-sm" style="top:8%;right:14%;width:40px;--r:0" viewBox="0 0 60 60"><path class="draw" d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg>
+    <svg class="doodle float c hide-sm" style="bottom:8%;left:8%;width:64px;--r:5deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M20 35 Q30 45 40 35"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+    <svg class="doodle hide-sm" style="bottom:14%;right:9%;width:54px;--r:-6deg" viewBox="0 0 60 60"><path class="draw" d="M14 24 H42 V40 Q42 50 28 50 Q14 50 14 40 Z M42 28 Q52 28 52 35 Q52 42 42 40 M20 12 Q24 17 20 20 M30 12 Q34 17 30 20"/></svg>
+    <svg class="doodle marker float b hide-sm" style="top:40%;left:3%;width:40px;--r:10deg" viewBox="0 0 60 60"><path class="draw" d="M30 6 L36 22 L53 24 L40 35 L44 52 L30 43 L16 52 L20 35 L7 24 L24 22 Z"/></svg>
+    <svg class="doodle float hide-sm" style="top:55%;right:16%;width:48px;--r:-5deg" viewBox="0 0 60 60"><path class="draw" d="M30 50 C8 34 11 13 30 22 C49 13 52 34 30 50 Z"/></svg>
+
+  <!-- ===================== GAMES ===================== -->
+  <section class="games" id="games">
+    <div class="games-head">
+      <div class="kicker">// when the code compiles</div>
+      <div class="section-tag">the <span class="hl">game room</span></div>
+    </div>
+    <div class="corkboard">
+      <div class="polaroid"><span class="pin"></span><div class="photo" style="background-image:url('https://steamcdn-a.akamaihd.net/steam/apps/578080/library_600x900.jpg')"></div><div class="label">PUBG</div><div class="hrs">~1,100 hrs 😵</div></div>
+      <div class="polaroid tape"><div class="photo" style="background-image:url('https://steamcdn-a.akamaihd.net/steam/apps/730/library_600x900.jpg')"></div><div class="label">CS2</div><div class="hrs">1,013 hrs</div></div>
+      <div class="polaroid"><span class="pin"></span><div class="photo" style="background-image:url('https://steamcdn-a.akamaihd.net/steam/apps/2507950/library_600x900.jpg')"></div><div class="label">Delta Force</div><div class="hrs">903 hrs</div></div>
+      <div class="polaroid tape"><div class="photo" style="background-image:url('https://steamcdn-a.akamaihd.net/steam/apps/1517290/library_600x900.jpg')"></div><div class="label">BF 2042</div><div class="hrs">890 hrs</div></div>
+    </div>
+
+    <!-- games doodles -->
+    <svg class="doodle marker float hide-sm" style="top:10%;left:6%;width:80px;--r:-6deg" viewBox="0 0 64 64"><path class="draw" d="M34 4 L16 34 L28 34 L24 58 L48 24 L33 24 Z"/></svg>
+    <svg class="doodle float b hide-sm" style="bottom:12%;right:7%;width:70px;--r:8deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M19 36 Q30 47 41 36"/><path class="draw" d="M16 22 L26 26 M44 22 L34 26"/><circle class="fill" cx="23" cy="29" r="2.6"/><circle class="fill" cx="37" cy="29" r="2.6"/></svg>
+    <svg class="doodle hide-sm" style="top:16%;right:9%;width:56px;--r:4deg" viewBox="0 0 70 60"><path class="draw" d="M6 20 Q16 2 26 20 T46 20 T66 18"/></svg>
+    <svg class="doodle marker float c hide-sm" style="bottom:8%;left:9%;width:50px;--r:-4deg" viewBox="0 0 60 60"><path class="draw" d="M30 8 V52 M8 30 H52 M14 14 L46 46 M46 14 L14 46"/></svg>
+    <svg class="doodle hide-sm" style="top:40%;left:4%;width:58px;--r:6deg" viewBox="0 0 60 60"><path class="draw" d="M22 10 V44 M22 18 L42 12 V40 M14 44 A8 6 0 1 0 22 44 M34 40 A8 6 0 1 0 42 40"/></svg>
+    <svg class="doodle float b hide-sm" style="top:50%;right:5%;width:54px;--r:-7deg" viewBox="0 0 64 64"><path class="draw" d="M20 14 Q44 4 50 26 Q60 46 36 50 Q12 56 9 34 Q6 16 20 14 Z"/></svg>
+    <svg class="doodle marker float hide-sm" style="bottom:24%;right:20%;width:38px;--r:8deg" viewBox="0 0 60 60"><path class="draw" d="M30 6 L36 22 L53 24 L40 35 L44 52 L30 43 L16 52 L20 35 L7 24 L24 22 Z"/></svg>
+
+  <!-- ===================== FOOTER ===================== -->
+  <section class="foot wrap" id="contact">
+    <div class="big">let's<br><span style="color:var(--marker)">make</span> something.</div>
+    <div class="links">
+      <a href="#">email</a><a href="#">linkedin</a><a href="#">github</a><a href="#">instagram</a>
+    </div>
+    <div class="note">Sidharth Parihar · MMXXVI · drawn by hand (well, by code)</div>
+
+    <!-- footer doodles -->
+    <svg class="doodle marker float hide-sm" style="top:6%;left:10%;width:64px;--r:-8deg" viewBox="0 0 60 60"><path class="draw" d="M30 50 C8 34 11 13 30 22 C49 13 52 34 30 50 Z"/></svg>
+    <svg class="doodle float b hide-sm" style="top:18%;right:12%;width:60px;--r:7deg" viewBox="0 0 60 60"><circle class="draw" cx="30" cy="30" r="26"/><path class="draw" d="M20 36 Q30 47 40 36"/><circle class="fill" cx="22" cy="25" r="2.6"/><circle class="fill" cx="38" cy="25" r="2.6"/></svg>
+  </section>
+</main>
+
+<!-- doodle buddy: a kid that roams the page & interacts (see SCENES in script) -->
+<div class="buddy" aria-hidden="true">
+  <div class="buddy-say">hi!</div>
+  <div class="buddy-flip"><div class="buddy-bob"><div class="buddy-fig"></div></div></div>
+</div>
+
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script>
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- set --len on every .draw path so dasharray works ---- */
+document.querySelectorAll('.draw').forEach(p=>{
+  try{const L=p.getTotalLength();p.style.setProperty('--len',L);}catch(e){p.style.setProperty('--len',1000);}
+});
+
+/* ---- BOOKS: build 6 top + 14 others into 4 parallax columns ---- */
+const BOOKS=[
+  {t:"The Way of Kings",a:"Sanderson",c:"14658316",r:5,top:1},
+  {t:"Red Rising",a:"Pierce Brown",c:"7316188",r:5,top:1},
+  {t:"The Eye of the World",a:"Robert Jordan",c:"isbn/9780812511819",r:5,top:1},
+  {t:"Project Hail Mary",a:"Andy Weir",c:"isbn/9780593135211",r:5,top:1},
+  {t:"Mistborn",a:"Sanderson",c:"14658160",r:4.5,top:1},
+  {t:"Assassin's Apprentice",a:"Robin Hobb",c:"4915230",r:4.5,top:1},
+  {t:"Words of Radiance",a:"Sanderson",c:"14658334",r:5},
+  {t:"Leviathan Wakes",a:"James S.A. Corey",c:"7314237",r:5},
+  {t:"The Great Hunt",a:"Robert Jordan",c:"182352",r:5},
+  {t:"The Dragon Reborn",a:"Robert Jordan",c:"603239",r:5},
+  {t:"Eragon",a:"Paolini",c:"13921600",r:4},
+  {t:"Lord of Chaos",a:"Robert Jordan",c:"182398",r:5},
+  {t:"Children of Time",a:"Tchaikovsky",c:"8264706",r:0},
+  {t:"Gardens of the Moon",a:"Steven Erikson",c:"374277",r:0},
+  {t:"The Black Prism",a:"Brent Weeks",c:"6459308",r:0},
+  {t:"Malice",a:"John Gwynne",c:"8458717",r:0},
+  {t:"Norse Mythology",a:"Neil Gaiman",c:"7898682",r:0},
+  {t:"Storm Front",a:"Jim Butcher",c:"6414916",r:0},
+  {t:"Jade City",a:"Fonda Lee",c:"10401388",r:0},
+  {t:"Empire of Silence",a:"Ruocchio",c:"8789487",r:0},
+];
+function cover(c){return c.startsWith('isbn')?`https://covers.openlibrary.org/b/${c}-L.jpg`:`https://covers.openlibrary.org/b/id/${c}-L.jpg`;}
+function stars(r){if(!r)return'';const f=Math.round(r);return '★'.repeat(f)+'☆'.repeat(5-f);}
+(function buildBooks(){
+  const grid=document.getElementById('booksGrid');
+  const nCols=window.innerWidth<700?2:(window.innerWidth<1000?3:4);
+  const cols=Array.from({length:nCols},()=>{const d=document.createElement('div');d.className='book-col';grid.appendChild(d);return d;});
+  BOOKS.forEach((b,i)=>{
+    const el=document.createElement('div');
+    el.className='book'+(b.top?' top':'');
+    el.innerHTML=`<div class="cover" style="background-image:url('${cover(b.c)}')"></div>
+      <div class="t">${b.t}</div><div class="a">${b.a}</div>
+      ${b.r?`<div class="stars">${stars(b.r)}</div>`:''}`;
+    cols[i%nCols].appendChild(el);
+  });
+})();
+
+/* ============================================================
+   DOODLE BUDDY — scroll companion that reacts per section.
+   ---- TO ADD A NEW SECTION: add ONE line to SCENES below. ----
+   { sel:'#your-section-id', pose:'read', line:'whatever it says' }
+   `pose` must be a key in POSES. To invent a new reaction,
+   add a new entry to POSES (an inline SVG of the character).
+   ============================================================ */
+const _H=`<path d="M50 6 Q53 1 56 5"/><circle cx="50" cy="22" r="15"/><circle class="fc" cx="45" cy="20" r="1.7"/><circle class="fc" cx="55" cy="20" r="1.7"/><path d="M45 27 Q50 31 55 27"/>`;
+const _B=`<path d="M50 37 V72"/>`;
+/* standing legs that gently shift weight (idle) */
+const _L=`<g class="legL"><path d="M50 72 L41 100"/><path d="M41 100 l-6 1"/></g><g class="legR"><path d="M50 72 L59 100"/><path d="M59 100 l6 1"/></g>`;
+/* folded sitting legs */
+const _SIT=`<g class="sitLower"><path d="M50 62 Q33 77 27 87 Q44 85 50 82 Q56 85 73 87 Q67 77 50 62 Z"/></g>`;
+const POSES={
+  /* hero: scribbling/signing the name */
+  draw:`<svg viewBox="0 0 100 110">${_H}${_B}${_L}<path d="M50 46 L34 60"/><g class="scribble"><path d="M50 46 L72 56"/><path d="M72 56 L83 62"/></g><path class="spark" d="M82 66 q6 0 4 6"/></svg>`,
+  /* work: coding on a laptop */
+  build:`<svg viewBox="0 0 100 110">${_H}${_B}<path d="M50 72 L42 96"/><path d="M50 72 L58 96"/><path class="fc2" d="M28 99 H72"/><path d="M36 97 H64 L68 85 H32 Z"/><path d="M35 85 V73 H65 V85"/><path class="fc2" d="M40 78 H60 M40 81 H53"/><g class="type"><path d="M50 46 L41 84"/><path d="M50 46 L59 84"/></g></svg>`,
+  /* books: SITTING & reading, head nods, page flips */
+  read:`<svg viewBox="0 0 100 110"><path d="M50 6 Q53 1 56 5"/><g class="nod"><circle cx="50" cy="22" r="14"/><circle class="fc" cx="45" cy="22" r="1.7"/><circle class="fc" cx="55" cy="22" r="1.7"/><path d="M45 28 Q50 31 55 28"/></g><path d="M50 36 V62"/>${_SIT}<g><path d="M35 54 L50 50 L65 54 L65 70 L50 66 L35 70 Z"/><path d="M50 50 V66"/><path class="page" d="M50 52 L62 55 L62 64 L50 62 Z"/></g><path d="M50 44 L37 56"/><path d="M50 44 L63 56"/></svg>`,
+  /* plain sitting (idle / waiting) */
+  sit:`<svg viewBox="0 0 100 110">${_H}<path d="M50 37 V62"/>${_SIT}<path d="M50 46 L38 58"/><path d="M50 46 L62 58"/></svg>`,
+  /* landing crouch — held briefly when touching down from parachute/rope */
+  land:`<svg viewBox="0 0 100 110">${_H}<path d="M50 37 V56"/><path d="M50 56 L37 68 L40 88"/><path d="M40 88 l-6 2"/><path d="M50 56 L63 68 L60 88"/><path d="M60 88 l6 2"/><path d="M50 43 L33 49"/><path d="M50 43 L67 49"/><path class="spark" d="M28 92 l-7 4 M72 92 l7 4 M50 97 l0 7"/></svg>`,
+  /* games: mashing a controller */
+  play:`<svg viewBox="0 0 100 110">${_H}${_B}${_L}<path class="ctrl" d="M37 59 q13 -5 26 0 q5 7 -1 11 q-7 -2 -12 -2 q-5 0 -12 2 q-6 -4 -1 -11 Z"/><circle class="fc" cx="45" cy="64" r="1.4"/><circle class="fc" cx="55" cy="64" r="1.4"/><g class="mash"><path d="M50 46 L42 60"/><path d="M50 46 L58 60"/></g></svg>`,
+  /* contact: waving hello */
+  wait:`<svg viewBox="0 0 100 110">${_H}${_B}<path d="M50 72 L41 100"/><path d="M41 100 l-6 1"/><g class="tap"><path d="M50 72 L59 98"/><path d="M59 98 l6 1"/></g><path d="M50 46 L36 58"/><g class="wave"><path d="M50 46 L66 32"/></g><path class="fc2" d="M70 26 l4 -3 M71 30 l4 0"/></svg>`,
+  /* travel: walking (legs + arms swing) */
+  walk:`<svg viewBox="0 0 100 110">${_H}${_B}<g class="legA"><path d="M50 72 L44 100"/><path d="M44 100 l-6 1"/></g><g class="legB"><path d="M50 72 L56 100"/><path d="M56 100 l6 1"/></g><g class="armA"><path d="M50 46 L41 64"/></g><g class="armB"><path d="M50 46 L59 64"/></g></svg>`,
+  /* travel: climbing a rope (scrolling up) */
+  climb:`<svg viewBox="0 0 100 120"><path class="rope" d="M52 -34 V42"/>${_H}<path d="M50 37 V72"/><g class="reachA"><path d="M50 45 L53 22"/></g><g class="reachB"><path d="M50 47 L52 34"/></g><path d="M50 72 L43 94 l-5 -5"/><path d="M50 72 L57 93 l5 -5"/></svg>`,
+  /* travel: parachuting (long drop) */
+  para:`<svg viewBox="0 0 120 152"><g class="sway"><path d="M16 42 Q60 -18 104 42 Z"/><path d="M16 42 Q60 30 104 42"/><path d="M30 42 L52 80 M50 42 L57 80 M70 42 L63 80 M90 42 L68 80"/><g transform="translate(10,58)">${_H}${_B}<path d="M50 72 L42 98"/><path d="M50 72 L58 98"/><path d="M42 98 l-5 1"/><path d="M58 98 l5 1"/><path d="M50 46 L40 60"/><path d="M50 46 L60 60"/></g></g></svg>`,
+};
+window.__POSES=POSES;  // debug hook: inspect/preview every character pose
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* INTERACTION HOOK: a scene can supply `drive(bw,bh)` returning the exact
+   screen point the kid should hold (and optional face). Work uses it to ride
+   the leading tip of the timeline line, so the KID draws it as you scroll.
+   Add a similar function for any section to make the kid author its motion. */
+function driveSpine(bw,bh){
+  const path=document.querySelector('.spine path'); if(!path)return null;
+  const total=path.getTotalLength();
+  const off=parseFloat(getComputedStyle(path).strokeDashoffset)||0;
+  const drawn=clamp(total-off,0,total);
+  const pt=path.getPointAtLength(drawn);
+  const m=path.getScreenCTM(); if(!m)return null;
+  const sx=pt.x*m.a+pt.y*m.c+m.e, sy=pt.x*m.b+pt.y*m.d+m.f;
+  return {x:sx-bw*0.17, y:sy-bh*0.56, face:-1}; // pencil hand sits on the tip
+}
+
+/* Each scene: section that activates it (`sel`), element to travel to (`target`)
+   OR a `drive` fn, where it perches (`anchor`: right|left|sit-top|below),
+   `face`, `pose`, `line`. `attached:true` = stay in pose & ride the target
+   instead of using walk/climb/parachute travel. Optional `color` recolors the
+   kid for that section (defaults to ink) — use it where ink blends in.        */
+const SCENES=[
+  { sel:'#top',     target:'.name-underline', anchor:'right',   face:'left',  pose:'draw',  line:'lemme sign that ✎' },
+  { sel:'#work',    drive:driveSpine, attached:true,            face:'left',  pose:'draw',  line:'drawing it in…' },
+  { sel:'#books',   target:'.books-grid',     anchor:'sit-top', face:'right', pose:'read',  line:'one more chapter…', travel:'para', color:'#e4572e' },
+  { sel:'#games',   target:'.corkboard',      anchor:'left',    face:'right', pose:'play',  line:'GG! 🎮' },
+  { sel:'#contact', target:'.foot .big',      anchor:'right',   face:'left',  pose:'wait',  line:'hi! say hello 👋' },
+];
+const buddyEl=document.querySelector('.buddy');
+const buddyFlip=buddyEl.querySelector('.buddy-flip');
+const buddyFig=buddyEl.querySelector('.buddy-fig');
+const buddySay=buddyEl.querySelector('.buddy-say');
+const TRAVEL=new Set(['walk','climb','para']);  // moving poses
+let curPose='';
+function setPose(p,line){
+  if(p!==curPose){
+    /* coming OUT of a travel pose into a grounded one ⇒ play the landing squash */
+    const fromTravel=TRAVEL.has(curPose)&&!TRAVEL.has(p);
+    curPose=p; buddyFig.dataset.pose=p;          // expose for debugging/inspection
+    buddyFig.innerHTML=POSES[p]||'';
+    buddyFig.classList.remove('pop','land');
+    void buddyFig.offsetWidth;                   // restart the entrance animation
+    buddyFig.classList.add(fromTravel?'land':'pop');  // the swap IS instant; the squash is the transition
+  }
+  buddySay.textContent=line||'';
+  buddySay.style.display=line?'block':'none';
+}
+const active={el:null,drive:null,anchor:'right',face:1,pose:'draw',line:'',attached:false,travel:null,traveling:false,mode:null,landUntil:0};
+function setScene(s){
+  active.el=s.target?document.querySelector(s.target):document.querySelector(s.sel);
+  active.drive=s.drive||null;
+  active.anchor=s.anchor||'right';
+  active.face=(s.face==='left')?-1:1;
+  active.pose=s.pose; active.line=s.line; active.attached=!!s.attached;
+  active.travel=s.travel||null;
+  active.traveling=!active.attached;   // walk/climb/parachute over, THEN do the pose
+  active.mode=null;                    // pick (and latch) a fresh travel mode for this trip
+  active.landUntil=0;                  // timestamp until which to hold the landing crouch
+  if(s.color) buddyEl.style.setProperty('--buddy-ink',s.color);  // recolor where ink blends in
+  else buddyEl.style.removeProperty('--buddy-ink');
+  buddyFlip.style.transform=`scaleX(${active.face})`;
+  setPose(s.pose,s.line);
+}
+function anchorPos(name,r,bw,bh){
+  const cx=r.left+r.width/2;
+  switch(name){
+    case 'sit-top': return {x:cx-bw/2,        y:r.top-bh*0.78};
+    case 'left':    return {x:r.left-bw-8,    y:r.top+r.height/2-bh/2};
+    case 'below':   return {x:cx-bw/2,        y:r.bottom-bh*0.2};
+    case 'right':
+    default:        return {x:r.right+8,      y:r.top+r.height/2-bh/2};
+  }
+}
+setScene(SCENES[0]); // initial scene
+
+if(prefersReduced){
+  document.querySelectorAll('.anno').forEach(a=>a.style.opacity=1);
+  document.querySelector('.preloader').classList.add('done');
+  buddyEl.classList.add('show');
+}else{
+  /* ---- Lenis smooth scroll ---- */
+  const lenis=new Lenis({lerp:.09});
+  function raf(t){lenis.raf(t);requestAnimationFrame(raf);} requestAnimationFrame(raf);
+  gsap.registerPlugin(ScrollTrigger);
+  lenis.on('scroll',ScrollTrigger.update);
+
+  /* ---- animated background: parallax ghost doodles + drifting ruled lines ---- */
+  const bgItems=[...document.querySelectorAll('.bg-item')];
+  const paperLines=document.querySelector('.paper-lines');
+  lenis.on('scroll',({scroll})=>{
+    bgItems.forEach(el=>{el.style.transform=`translateY(${scroll*parseFloat(el.dataset.spd)}px)`;});
+    if(paperLines) paperLines.style.transform=`translateY(${(scroll*0.06)%34}px)`;
+  });
+
+  /* ---- pen-nib cursor + ink trail ---- */
+  const nib=document.querySelector('.nib'),dot=document.querySelector('.ink-dot');
+  let mx=innerWidth/2,my=innerHeight/2,dx=mx,dy=my;
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;nib.style.transform=`translate(${mx-3}px,${my-2}px) rotate(-35deg)`;});
+  (function trail(){dx+=(mx-dx)*.18;dy+=(my-dy)*.18;dot.style.left=dx+'px';dot.style.top=dy+'px';requestAnimationFrame(trail);})();
+
+  /* ---- preloader: draw squiggle + count ---- */
+  const pre=document.querySelector('.preloader'),num=document.querySelector('.preloader-num');
+  const squig=pre.querySelector('.squig');
+  gsap.to(squig,{strokeDashoffset:0,duration:1.4,ease:'power1.inOut'});
+  let c={v:0};
+  gsap.to(c,{v:100,duration:1.4,ease:'power1.inOut',
+    onUpdate:()=>num.textContent=Math.round(c.v)+'%',
+    onComplete:()=>{pre.classList.add('done');startHero();}});
+
+  /* ---- HERO reveal ---- */
+  function startHero(){
+    buddyEl.classList.add('show');
+    const tl=gsap.timeline();
+    tl.to('.hero h1 .reveal',{clipPath:'inset(0 0% 0 0)',duration:.7,stagger:.18,ease:'power3.out'})
+      .to('.name-underline path',{strokeDashoffset:0,duration:.7,ease:'power2.out'},'-=.2')
+      .to('.anno',{opacity:1,duration:.5,stagger:.15},'-=.3')
+      .to('.anno .arrow path',{strokeDashoffset:0,duration:.6,stagger:.15},'<');
+  }
+
+  /* ---- WORK timeline: spine + nodes draw on scroll ---- */
+  gsap.to('.spine path',{strokeDashoffset:0,ease:'none',
+    scrollTrigger:{trigger:'.timeline',start:'top 70%',end:'bottom 80%',scrub:.6}});
+  gsap.utils.toArray('.t-node circle').forEach((c,i)=>{
+    gsap.to(c,{strokeDashoffset:0,duration:.5,
+      scrollTrigger:{trigger:c,start:'top 85%'}});
+  });
+  gsap.utils.toArray('.connector path').forEach(p=>{
+    gsap.to(p,{strokeDashoffset:0,duration:.6,
+      scrollTrigger:{trigger:p,start:'top 88%'}});
+  });
+  gsap.utils.toArray('.card').forEach(card=>{
+    gsap.from(card,{y:40,opacity:0,duration:.6,ease:'power2.out',
+      scrollTrigger:{trigger:card,start:'top 88%'}});
+  });
+
+  /* ---- BOOKS: parallax columns + velocity skew ---- */
+  if(window.innerWidth>900){
+    gsap.utils.toArray('.book-col').forEach((col,i)=>{
+      const dir=i%2===0?-1:1;
+      gsap.to(col,{yPercent:dir*(8+i*4),ease:'none',
+        scrollTrigger:{trigger:'.books',start:'top bottom',end:'bottom top',scrub:1}});
+    });
+    const grid=document.querySelector('.books-grid');
+    let cur=0;
+    lenis.on('scroll',({velocity})=>{
+      const sk=gsap.utils.clamp(-8,8,velocity*.4);
+      gsap.to(grid,{skewY:sk,duration:.3,overwrite:true});
+    });
+  }
+  gsap.utils.toArray('.book').forEach(b=>{
+    gsap.from(b,{rotateX:35,y:50,opacity:0,transformPerspective:600,ease:'power2.out',
+      scrollTrigger:{trigger:b,start:'top 95%',end:'top 60%',scrub:.8}});
+  });
+
+  /* ---- GAMES: polaroids settle in with a pin-drop ---- */
+  gsap.utils.toArray('.polaroid').forEach((p,i)=>{
+    const rot=gsap.getProperty(p,'rotation')||0;
+    gsap.from(p,{y:-60,opacity:0,rotation:rot+(i%2?12:-12),duration:.7,ease:'back.out(1.6)',
+      scrollTrigger:{trigger:'.corkboard',start:'top 75%'},delay:i*.12});
+  });
+
+  /* ---- scattered doodles: self-draw when scrolled into view ---- */
+  gsap.utils.toArray('.doodle').forEach(d=>{
+    const paths=d.querySelectorAll('.draw'), fills=d.querySelectorAll('.fill');
+    gsap.set(d,{opacity:0});
+    ScrollTrigger.create({trigger:d,start:'top 94%',once:true,onEnter:()=>{
+      gsap.to(d,{opacity:.9,duration:.3});
+      gsap.to(paths,{strokeDashoffset:0,duration:.7,ease:'power1.inOut',stagger:.08});
+      gsap.from(fills,{scale:0,transformOrigin:'center',duration:.3,delay:.5,stagger:.05});
+    }});
+  });
+
+  /* ---- buddy roams: glide toward target, picking how it travels ---- */
+  let bx=window.innerWidth*0.5, by=window.innerHeight*0.5;
+  (function follow(){
+    const bw=buddyEl.offsetWidth||118, bh=buddyEl.offsetHeight||118;
+    let x,y,face=active.face;
+    if(active.drive){ const p=active.drive(bw,bh); if(p){x=p.x;y=p.y;if(p.face!==undefined)face=p.face;} }
+    if(x===undefined && active.el){ const r=active.el.getBoundingClientRect(); ({x,y}=anchorPos(active.anchor,r,bw,bh)); }
+    if(x!==undefined){
+      x=clamp(x,6,window.innerWidth-bw-6);
+      y=clamp(y,66,window.innerHeight-bh-10);
+      const dx=x-bx, dy=y-by, dist=Math.hypot(dx,dy);
+      bx+=dx*0.09; by+=dy*0.09;
+      buddyEl.style.left=bx+'px'; buddyEl.style.top=by+'px'; buddyEl.style.bottom='auto';
+
+      if(active.attached){
+        /* riding a live target (e.g. drawing the line) — always in pose */
+        setPose(active.pose,active.line);
+        buddyFlip.style.transform=`scaleX(${face})`;
+      }else if(active.traveling){
+        /* still en route: walk / climb / parachute until we arrive */
+        if(dist<40){
+          active.traveling=false;
+          /* queue a VISIBLE landing crouch (~520ms, fps-independent) when touching down */
+          active.landUntil = (active.mode==='para'||active.mode==='climb') ? performance.now()+520 : 0;
+        }else{
+          /* pick the travel mode ONCE at trip start and hold it — recomputing each
+             frame made dy jitter across the thresholds and restart the animation. */
+          if(!active.mode){
+            active.mode = (active.travel && dy>30) ? active.travel
+                        : (dy>150 ? 'para' : (dy < -50 ? 'climb' : 'walk'));
+          }
+          setPose(active.mode,'');
+          buddyFlip.style.transform = (active.mode==='walk') ? `scaleX(${dx<0?-1:1})` : 'scaleX(1)';
+        }
+      }else if(performance.now()<active.landUntil){
+        /* the bridge: crouched landing held ~0.5s, drop-and-squash plays via .land */
+        setPose('land','');
+        buddyFlip.style.transform=`scaleX(${active.face})`;
+      }else{
+        /* arrived & settled: hold the section pose (animations run cleanly) */
+        setPose(active.pose,active.line);
+        buddyFlip.style.transform=`scaleX(${active.face})`;
+      }
+    }
+    requestAnimationFrame(follow);
+  })();
+
+  /* ---- buddy reacts to each section (driven by SCENES) ---- */
+  SCENES.forEach(s=>{
+    const el=document.querySelector(s.sel);
+    if(!el)return;
+    ScrollTrigger.create({trigger:el,start:'top 55%',end:'bottom 45%',
+      onEnter:()=>setScene(s),
+      onEnterBack:()=>setScene(s)});
+  });
+
+  ScrollTrigger.refresh();
+  addEventListener('load',()=>ScrollTrigger.refresh());
+}
+</script>
+</body>
+</html>
